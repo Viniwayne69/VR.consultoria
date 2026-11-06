@@ -203,9 +203,9 @@ p {text-wrap:pretty}
   .giant-number {font-size:122px;bottom:-10px;left:-12px}
   .symptom-card h3 {font-size:15px;line-height:1.5}
   .cause {padding-block:55px}
-  .cause-grid {grid-template-columns:.9fr 1.3fr;align-items:center;gap:40px}
-  .cause h2 {font-size:40px}
-  .cause-cards {grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  .cause-grid {grid-template-columns:1fr;align-items:center;gap:32px}
+  .cause h2 {font-size:40px;max-width:none}
+  .cause-cards {grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
   .cause-card {padding:28px 23px;min-height:190px}
   .cause-card p {font-size:17px}
   .pillars {padding-block:48px}
@@ -260,10 +260,10 @@ p {text-wrap:pretty}
   .symptom-card {padding-left:126px}
   .symptom-card h3 {font-size:17px}
   .giant-number {font-size:150px;bottom:-17px;left:-9px}
-  .cause-grid {grid-template-columns:.95fr 1.25fr;gap:60px}
-  .cause h2 {font-size:40px}
+  .cause-grid {grid-template-columns:1fr;gap:36px}
+  .cause h2 {font-size:40px;max-width:none}
   .cause-card {min-height:210px;padding:32px}
-  .cause-card p {font-size:20px}
+  .cause-card p {font-size:19px;max-width:none}
   .pillar-card {padding:24px}
   .pillar-card h3 {font-size:28px}
   .pillar-card .card-heading {gap:15px}
@@ -304,8 +304,9 @@ p {text-wrap:pretty}
   .method-steps .card-heading h3 {font-size:20px;padding-left:0;border-left:0}
   .method-steps li+li::before {width:23px;left:-23px;top:42px}
   .cause-grid {grid-template-columns:1fr}
-  .cause h2 {max-width:620px}
+  .cause h2 {max-width:none}
   .cause-card {min-height:165px}
+  .cause-card h3 {font-size:22px}
 }
 @media(min-width:1100px) {
   .method-steps {gap:48px}
