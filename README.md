@@ -18,7 +18,7 @@ const CTA_URL = '#contato';
 const EMAIL = '';
 const PHONE = '';
 const INSTAGRAM = '';
-const PHOTO_SRC = '';
+const PHOTO_SRC = 'assets/vinicius-ribeiro.webp';
 ```
 
 Troque `CTA_URL` pelo endereço de agendamento, formulário ou WhatsApp. Todos os cinco botões de diagnóstico seguem esse único valor. Enquanto estiver em `#contato`, os botões só navegam para a chamada final: não enviam dados nem fazem agendamento.
