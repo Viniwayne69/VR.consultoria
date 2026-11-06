@@ -58,7 +58,7 @@ Use a pasta que contém `index.html` como raiz do projeto. Escolha um projeto es
 
 ## Imagens
 
-Os arquivos `assets/fachada-antes.webp` e `assets/fachada-depois.webp` derivam de uma composição criada com o gerador de imagens integrado. Briefing usado: a mesma pequena fachada brasileira vista de frente, com toldo, janela e porta central; antes apagada e sem pessoas em tons de tinta e papel; depois em vinho e papel com clientes anônimos na entrada; fotografia editorial com grão, sem texto, logotipo ou rosto identificável. O carimbo e os demais elementos geométricos são SVGs editáveis.
+Os arquivos `assets/loja-antes.webp` e `assets/loja-depois.webp` (Antes e depois) e `assets/sintoma-*.webp` (cartões de sintomas) foram gerados com IA a partir de prompts próprios, em formato 3:2 (1536×1024). O Antes e o Depois mostram a mesma loja de shopping, com o mesmo enquadramento: no Antes ela está cinza e vazia, com um homem e uma mulher tristes; no Depois está viva, cheia de clientes, com os dois sorrindo. São pessoas fictícias. O carimbo e os demais elementos geométricos são SVGs editáveis.
 
 ## Animações e interação
 
