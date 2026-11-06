@@ -1,6 +1,6 @@
 # Vinicius Ribeiro — Marca e vendas
 
-Página única em HTML, CSS e JavaScript puro. Sem dependências, instalação ou etapa de build. A estrutura de navegação, os 13 blocos do briefing e as correções obrigatórias estão implementados.
+Página única em HTML, CSS e JavaScript puro. Sem dependências, instalação ou etapa de build. A estrutura de navegação, os blocos do briefing (a seção de palestras foi retirada) e as correções obrigatórias estão implementados.
 
 ## Estrutura
 
@@ -21,7 +21,7 @@ const INSTAGRAM = '';
 const PHOTO_SRC = '';
 ```
 
-Troque `CTA_URL` pelo endereço de agendamento, formulário ou WhatsApp. Todos os seis botões de diagnóstico e palestra seguem esse único valor. Enquanto estiver em `#contato`, os botões só navegam para a chamada final: não enviam dados nem fazem agendamento.
+Troque `CTA_URL` pelo endereço de agendamento, formulário ou WhatsApp. Todos os cinco botões de diagnóstico seguem esse único valor. Enquanto estiver em `#contato`, os botões só navegam para a chamada final: não enviam dados nem fazem agendamento.
 
 Preencha `EMAIL` com seu endereço de e-mail, `PHONE` com o número internacional e `INSTAGRAM` com a URL completa do perfil. Os três links no rodapé ficam ativos nesses canais após o preenchimento. Enquanto estiverem vazios, levam ao mesmo destino de `CTA_URL`.
 
@@ -35,7 +35,7 @@ O mesmo componente atualiza o hero e a seção Quem sou eu, remove a legenda SUA
 
 ## Perguntas frequentes
 
-Em `index.html`, procure o comentário `FAQ:`. Substitua somente o texto de cada `<p>` nos cinco elementos `.faq-panel`. Preserve os IDs, `aria-controls`, `aria-labelledby` e `aria-expanded` para manter a acessibilidade.
+Em `index.html`, procure o comentário `FAQ:`. Substitua somente o texto de cada `<p>` nos quatro elementos `.faq-panel`. Preserve os IDs, `aria-controls`, `aria-labelledby` e `aria-expanded` para manter a acessibilidade.
 
 ## Provas reais
 
@@ -53,7 +53,7 @@ Use a pasta que contém `index.html` como raiz do projeto. Escolha um projeto es
 - Menu compacto abre, fecha com Escape e fecha depois de navegar para uma seção.
 - FAQ abre e fecha por teclado, atualiza `aria-expanded` e oculta os outros painéis.
 - Setas, Home e End navegam entre as perguntas.
-- Um único h1, imagens com texto alternativo, links de âncora válidos e seis CTAs configurados.
+- Um único h1, imagens com texto alternativo, links de âncora válidos e cinco CTAs configurados.
 - Os recortes usam 10°, com a rotação de -8° do carimbo como exceção prevista no briefing.
 
 ## Imagens
