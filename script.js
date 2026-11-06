@@ -234,7 +234,7 @@ if (document.documentElement.classList.contains('anim')) {
     ['.hero-eyebrow', 0, 0], ['.hero h1', 120, 0], ['.hero-description', 520, 0], ['.hero .button', 680, 0], ['.hero-visual', 300, 0],
     ['.before-after .eyebrow', 0, 0], ['.before-after h2', 60, 0], ['.ba', 120, 0], ['.ba-captions', 300, 0], ['.comparison-manifesto', 80, 0],
     ['.symptoms h2', 0, 0], ['.symptom-card', 100, 150, 'lr'],
-    ['.cause .eyebrow', 0, 0], ['.cause h2', 60, 0], ['.cause-card', 160, 160, 'lr'],
+    ['.cause h2', 60, 0], ['.cause-card', 160, 160, 'lr'],
     ['.pillars .eyebrow', 0, 0], ['.pillars h2', 60, 0], ['.pillar-card', 140, 150, 'lr'],
     ['.method .eyebrow', 0, 0], ['.method h2', 60, 0], ['.method-steps li', 140, 180, 'lr'], ['.result-ribbon', 120, 0],
     ['.about-copy .eyebrow', 0, 0], ['.manifesto', 60, 0], ['.about-copy > p:last-child', 360, 0], ['.portrait-about', 160, 0], ['.proof-card', 200, 140],
