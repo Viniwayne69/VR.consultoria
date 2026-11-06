@@ -280,14 +280,8 @@ if (document.documentElement.classList.contains('anim')) {
     }, 200);
   }, { passive: true });
 
-  // Só com mouse: luz laranja que segue o cursor no hero, cartões que inclinam e botões que puxam o cursor.
+  // Só com mouse: cartões que inclinam e botões que puxam o cursor.
   if (finePointer) {
-    const hero = document.querySelector('.hero');
-    hero.addEventListener('pointermove', (event) => {
-      const rect = hero.getBoundingClientRect();
-      hero.style.setProperty('--mx', `${event.clientX - rect.left}px`);
-      hero.style.setProperty('--my', `${event.clientY - rect.top}px`);
-    });
     document.querySelectorAll('.pillar-card, .cause-card, .symptom-card, .method-steps li, .proof-card').forEach((card) => {
       card.addEventListener('pointermove', (event) => {
         const rect = card.getBoundingClientRect();

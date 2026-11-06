@@ -349,9 +349,8 @@ body {overflow-x:clip}
 .anim .w>span {display:inline-block;transform:translate3d(0,118%,0);transition:transform 1s var(--ease) calc(var(--d,0ms) + var(--i,0) * 80ms)}
 .anim .is-in .w>span {transform:none}
 
-/* Hero: o carimbo "bate" na página e gira com a rolagem; o retângulo vinho anda mais devagar; luz que segue o mouse */
+/* Hero: o carimbo "bate" na página e gira com a rolagem; o retângulo vinho anda mais devagar */
 .hero {position:relative;isolation:isolate}
-.hero::before {content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .5s ease;background:radial-gradient(620px circle at var(--mx,70%) var(--my,35%),rgba(240,96,26,.22),transparent 62%)}
 .hero-stamp {transform:rotate(calc(-8deg + var(--rot,0deg)))}
 .portrait::before {transform:translate(16px,calc(-16px - var(--par,0px)))}
 @keyframes stampIn {
@@ -393,7 +392,6 @@ body {overflow-x:clip}
 /* Botões e cartões (só onde existe mouse): levantam, inclinam em 3D e brilham */
 .button {translate:var(--bx,0px) var(--by,0px);transition:background-color .18s ease,transform .2s var(--ease),box-shadow .2s ease,translate .25s var(--ease)}
 @media(hover:hover) {
-  .hero:hover::before {opacity:1}
   .pillar-card,.symptom-card,.cause-card,.proof-card,.method-steps li {transition:transform .35s var(--ease),border-color .25s ease,box-shadow .25s ease}
   .pillar-card:hover,.symptom-card:hover,.cause-card:hover,.proof-card:hover,.method-steps li:hover {transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-8px);box-shadow:0 20px 38px rgba(0,0,0,.42)}
   .pillar-card:hover,.proof-card:hover {border-color:var(--fogo)}

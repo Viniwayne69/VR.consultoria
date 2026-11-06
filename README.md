@@ -66,7 +66,7 @@ Tudo está no fim de `styles.css` (bloco MOVIMENTO) e de `script.js` (bloco ANIM
 
 - Entrada ao rolar: cada bloco sobe, cresce e aparece; os cartões lado a lado entram de lados opostos (no desktop). Os títulos sobem palavra por palavra, por trás de uma máscara. A lista do que anima fica em `revealGroups`, no `script.js`: para animar um elemento novo, acrescente o seletor lá.
 - Paralaxe: números gigantes, fotos do antes e depois, retrato de "Quem sou eu" e números dos pilares andam em velocidades diferentes do resto (lista `parallaxItems`).
-- Só com mouse: luz laranja que segue o cursor no hero, cartões que inclinam em 3D e botões que puxam o cursor (magnéticos). Em telas de toque nada disso é ligado.
+- Só com mouse: cartões que inclinam em 3D e botões que puxam o cursor (magnéticos). Em telas de toque nada disso é ligado.
 - Hero: o carimbo VR "bate" na página e gira de leve ao rolar, e o retângulo vinho do retrato anda mais devagar que o resto.
 - Antes e depois: a fachada ganha cor conforme a rolagem e a faixa laranja se desenha sobre "Marca ignorada".
 - Sintomas, causa, pilares e método: números e cartões entram em sequência, o bloco vinho da causa abre e a linha entre as etapas do método se desenha.
