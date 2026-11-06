@@ -1,0 +1,1 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="160" viewBox="0 0 28 160"><defs><pattern id="stripes" width="14" height="160" patternUnits="userSpaceOnUse" patternTransform="rotate(10)"><rect width="14" height="160" fill="#111012"/><path fill="#F0601A" d="M0 0h7v160H0z"/></pattern></defs><path fill="url(#stripes)" d="M0 0h28v160H0z"/></svg>
