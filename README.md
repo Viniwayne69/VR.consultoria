@@ -31,7 +31,7 @@ Preencha `EMAIL` com seu endereço de e-mail, `PHONE` com o número internaciona
 2. Altere `PHOTO_SRC` para esse caminho no topo de `script.js`.
 3. Ajuste `PHOTO_ALT` se precisar descrever o retrato de outra maneira.
 
-O mesmo componente atualiza o hero e a seção Quem sou eu, remove a legenda SUA FOTO e aplica preto e branco de alto contraste automaticamente. Prefira uma foto vertical, com o rosto e o tronco centralizados. Para ajustar o enquadramento, edite `object-position` na regra `.portrait-image` em `styles.css`.
+O mesmo componente atualiza o hero e a seção Quem sou eu, remove a legenda SUA FOTO e mantém a foto em cores originais. Prefira uma foto vertical, com o rosto e o tronco centralizados. Para ajustar o enquadramento, edite `object-position` na regra `.portrait-image` em `styles.css`.
 
 ## Perguntas frequentes
 
