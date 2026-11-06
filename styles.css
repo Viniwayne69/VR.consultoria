@@ -85,8 +85,12 @@ p {text-wrap:pretty}
 .comparison-manifesto {font-size:28px;line-height:1.05;margin-top:28px;max-width:1100px}
 .symptoms {padding:42px 0}
 .symptom-grid {display:grid;gap:14px}
-.symptom-card {position:relative;isolation:isolate;overflow:hidden;min-height:136px;display:flex;align-items:center;background:var(--carvao);padding:25px 22px 25px 122px}
-.giant-number {position:absolute;z-index:-1;left:-5px;bottom:-18px;color:var(--vinho-vivo);font-size:128px;line-height:1}
+.symptom-card {position:relative;isolation:isolate;overflow:hidden;min-height:300px;display:flex;align-items:flex-end;background:var(--carvao);padding:24px 22px}
+.symptom-image {position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;transform:scale(1.12)}
+.symptom-card:nth-child(1) .symptom-image {object-position:25% 50%}
+.symptom-card:nth-child(2) .symptom-image {object-position:55% 50%}
+.symptom-card:nth-child(3) .symptom-image {object-position:42% 50%}
+.symptom-card::after {content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to top,rgba(17,16,18,.95) 0%,rgba(17,16,18,.82) 34%,rgba(17,16,18,.25) 64%,rgba(17,16,18,0) 100%)}
 .symptom-card h3 {font:500 17px/1.4 var(--body-font);text-transform:none;letter-spacing:0}
 .cause {position:relative;background:transparent;padding:48px 0;isolation:isolate}
 .cause::before {content:'';z-index:-1;position:absolute;inset:0;background:var(--vinho-vivo);clip-path:polygon(0 0,100% 0,100% calc(100% - 100px),calc(100% - 17.63px) 100%,0 100%)}
@@ -198,8 +202,7 @@ p {text-wrap:pretty}
   .comparison-manifesto {font-size:36px;margin-top:30px}
   .symptoms {padding:40px 0}
   .symptom-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
-  .symptom-card {padding:27px 20px 27px 95px;min-height:155px}
-  .giant-number {font-size:122px;bottom:-10px;left:-12px}
+  .symptom-card {padding:24px 20px;min-height:340px}
   .symptom-card h3 {font-size:15px;line-height:1.5}
   .cause {padding-block:55px}
   .cause-grid {grid-template-columns:1fr;align-items:center;gap:32px}
@@ -256,9 +259,8 @@ p {text-wrap:pretty}
   .hero-stamp {width:164px;height:164px;bottom:38px;right:-22px}
   .hero-eyebrow {font-size:12px}
   .hero-description {font-size:16px}
-  .symptom-card {padding-left:126px}
+  .symptom-card {padding:28px 24px;min-height:380px}
   .symptom-card h3 {font-size:17px}
-  .giant-number {font-size:150px;bottom:-17px;left:-9px}
   .cause-grid {grid-template-columns:1fr;gap:36px}
   .cause h2 {font-size:40px;max-width:none}
   .cause-card {min-height:210px;padding:32px}
@@ -367,8 +369,8 @@ body {overflow-x:clip}
 .anim .comparison-card.is-in .crossed-out::after {transform:scaleX(1)}
 
 /* Sintomas: o número gigante desliza para dentro */
-.anim .symptom-card .giant-number {opacity:0;transform:translateX(-70px);transition:opacity .9s var(--ease) calc(var(--d,0ms) + 240ms),transform .9s var(--ease) calc(var(--d,0ms) + 240ms)}
-.anim .symptom-card.is-in .giant-number {opacity:1;transform:none}
+.anim .symptom-card .symptom-image {transform:scale(1.28);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms)}
+.anim .symptom-card.is-in .symptom-image {transform:scale(1.12)}
 
 /* Causa: o bloco vinho com o corte de 10° desce e abre quando o primeiro item entra */
 @supports selector(:has(a)) {

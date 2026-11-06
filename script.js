@@ -237,7 +237,7 @@ if (document.documentElement.classList.contains('anim')) {
   const comparison = document.querySelector('.comparison-grid');
   // [seletor, velocidade, deslocamento máximo em px]: cada item desliza em relação ao resto da página.
   const parallaxItems = [];
-  [['.symptom-card .giant-number', 0.16, 34], ['.comparison-image > img', 0.06, 9], ['.portrait-about', 0.06, 30], ['.pillar-card .number', 0.08, 14]]
+  [['.symptom-card .symptom-image', 0.06, 9], ['.comparison-image > img', 0.06, 9], ['.portrait-about', 0.06, 30], ['.pillar-card .number', 0.08, 14]]
     .forEach(([selector, speed, max]) => document.querySelectorAll(selector).forEach((element) => parallaxItems.push({ element, box: element.parentElement, speed, max })));
   let frame = 0;
   function onScroll() {
