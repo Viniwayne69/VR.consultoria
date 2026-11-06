@@ -94,6 +94,8 @@ p {text-wrap:pretty}
 .crossed-out::after {content:'';position:absolute;left:-5%;right:-5%;top:calc(50% - 1.5px);height:3px;background:var(--fogo);clip-path:polygon(0 0,100% 0,calc(100% - .53px) 100%,.53px 100%)}
 .comparison-manifesto {font-size:28px;line-height:1.05;margin-top:28px;max-width:1100px}
 .symptoms {padding:42px 0}
+.symptoms-title {max-width:900px;margin-bottom:28px}
+.symptoms-title .hot {color:var(--fogo)}
 .symptom-grid {display:grid;gap:14px}
 .symptom-card {position:relative;isolation:isolate;overflow:hidden;min-height:300px;display:flex;align-items:flex-end;background:var(--carvao);padding:24px 22px}
 .symptom-image {position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;transform:scale(1.12)}
@@ -378,6 +380,8 @@ body {overflow-x:clip}
 .anim .ba-captions.is-in .crossed-out::after {transform:scaleX(1)}
 
 /* Sintomas: o número gigante desliza para dentro */
+@keyframes dotsPulse {0%,100% {opacity:1} 50% {opacity:.15}}
+.anim .symptoms-title .dots {animation:dotsPulse 1.4s ease-in-out 1.6s infinite}
 .anim .symptom-card .symptom-image {transform:scale(1.28);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms)}
 .anim .symptom-card.is-in .symptom-image {transform:scale(1.12)}
 

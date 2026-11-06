@@ -233,7 +233,7 @@ if (document.documentElement.classList.contains('anim')) {
   const revealGroups = [
     ['.hero-eyebrow', 0, 0], ['.hero h1', 120, 0], ['.hero-description', 520, 0], ['.hero .button', 680, 0], ['.hero-visual', 300, 0],
     ['.before-after .eyebrow', 0, 0], ['.before-after h2', 60, 0], ['.ba', 120, 0], ['.ba-captions', 300, 0], ['.comparison-manifesto', 80, 0],
-    ['.symptoms .eyebrow', 0, 0], ['.symptom-card', 100, 150, 'lr'],
+    ['.symptoms h2', 0, 0], ['.symptom-card', 100, 150, 'lr'],
     ['.cause .eyebrow', 0, 0], ['.cause h2', 60, 0], ['.cause-card', 160, 160, 'lr'],
     ['.pillars .eyebrow', 0, 0], ['.pillars h2', 60, 0], ['.pillar-card', 140, 150, 'lr'],
     ['.method .eyebrow', 0, 0], ['.method h2', 60, 0], ['.method-steps li', 140, 180, 'lr'], ['.result-ribbon', 120, 0],
@@ -249,20 +249,28 @@ if (document.documentElement.classList.contains('anim')) {
     element.setAttribute('aria-label', element.textContent.replace(/\s+/g, ' ').trim());
     const fragment = document.createDocumentFragment();
     let index = 0;
-    element.childNodes.forEach((node) => {
-      if (node.nodeType !== 3) { fragment.appendChild(node.cloneNode(true)); return; }
-      node.textContent.split(/\s+/).filter(Boolean).forEach((word) => {
-        const mask = document.createElement('span');
-        const inner = document.createElement('span');
-        mask.className = 'w';
-        mask.setAttribute('aria-hidden', 'true');
-        inner.textContent = word;
-        inner.style.setProperty('--i', index++);
-        mask.appendChild(inner);
-        fragment.appendChild(mask);
-        fragment.appendChild(document.createTextNode(' '));
+    // Palavras soltas e também as que estão dentro de destaques (<span>) sobem uma a uma.
+    (function split(parent, target) {
+      parent.childNodes.forEach((node) => {
+        if (node.nodeType === 1) {
+          const copy = node.cloneNode(false);
+          split(node, copy);
+          target.appendChild(copy);
+          return;
+        }
+        node.textContent.split(/\s+/).filter(Boolean).forEach((word) => {
+          const mask = document.createElement('span');
+          const inner = document.createElement('span');
+          mask.className = 'w';
+          mask.setAttribute('aria-hidden', 'true');
+          inner.textContent = word;
+          inner.style.setProperty('--i', index++);
+          mask.appendChild(inner);
+          target.appendChild(mask);
+          target.appendChild(document.createTextNode(' '));
+        });
       });
-    });
+    })(element, fragment);
     element.textContent = '';
     element.appendChild(fragment);
   }
