@@ -7,24 +7,35 @@ Página única em HTML, CSS e JavaScript puro. Sem dependências, instalação o
 - `index.html`: conteúdo, navegação, FAQ e template de retrato.
 - `styles.css`: identidade visual, responsividade e estados de foco.
 - `script.js`: configurações, menu mobile, retratos e acordeão acessível.
-- `assets/`: carimbo, favicon, listras, placeholder de retrato e fachadas ilustrativas.
+- `diagnostico.html`, `diagnostico.css`, `diagnostico.js`: o diagnóstico (quiz de 16 perguntas com resultado na hora).
+- `assets/`: carimbo, favicon, listras, placeholder de retrato, fachadas ilustrativas e o áudio do diagnóstico.
 
 ## Links e canais
 
 As primeiras linhas de `script.js` concentram a configuração:
 
 ```js
-const CTA_URL = '#contato';
+const CTA_URL = 'diagnostico.html';
 const EMAIL = '';
 const PHONE = '';
 const INSTAGRAM = '';
 const PHOTO_SRC = 'assets/vinicius-ribeiro.webp';
 ```
 
-Troque `CTA_URL` pelo endereço de agendamento, formulário ou WhatsApp. Todos os cinco botões de diagnóstico seguem esse único valor. Enquanto estiver em `#contato`, os botões só navegam para a chamada final: não enviam dados nem fazem agendamento.
+Todos os botões de diagnóstico seguem o valor de `CTA_URL`, hoje a página `diagnostico.html`. Para apontar para outro destino (agendamento, formulário ou WhatsApp), troque esse único valor.
 
 Preencha `EMAIL` com seu endereço de e-mail, `PHONE` com o número internacional e `INSTAGRAM` com a URL completa do perfil. Os três links no rodapé ficam ativos nesses canais após o preenchimento. Enquanto estiverem vazios, levam ao mesmo destino de `CTA_URL`.
 
+## Diagnóstico
+
+A página `diagnostico.html` reproduz o diagnóstico da HAZE com a identidade visual da VR: mesmas perguntas, mesma lógica, mesmas telas e animações.
+
+- **Fluxo:** boas-vindas, 16 perguntas (nome, negócio, o que quer conseguir, 11 de dor, faturamento e WhatsApp), tela de cálculo e resultado.
+- **Pontuação:** cada resposta de dor vale 0, 1 ou 2 pontos (0 a 22 no total); a nota de 1 a 10 mede o quanto a marca é desejada, e as seis áreas (Desejo, Vendas, Preço, Dinheiro, Liberdade, Futuro) mostram o ponto mais fraco no radar.
+- **Perfis e padrões:** o título do resultado vem de um padrão entre duas áreas ou, sem padrão, do perfil pela pontuação. Tudo fica nos dados do topo de `diagnostico.js`, junto com as perguntas, opções e textos.
+- **WhatsApp:** no topo de `diagnostico.js`, preencha `WHATSAPP_NUMBER` com DDI e DDD, só números (exemplo: `5581999999999`). Vazio, o botão abre o WhatsApp só com a mensagem pronta e a pessoa escolhe o contato. As respostas não vão para nenhum servidor: chegam a você pela mensagem.
+- **Som:** botão no cabeçalho liga uma música em loop (`assets/audio/get-away.mp3`, volume baixo) só depois do toque da pessoa. Troque o arquivo ou o caminho em `SOM_ARQUIVO`.
+- **Teclado:** A, B, C... escolhem a opção, Enter avança nos campos. Com `prefers-reduced-motion`, as animações são desligadas.
 ## Sua foto
 
 1. Coloque o arquivo em `assets/`, por exemplo `assets/vinicius-ribeiro.webp`.

@@ -1,5 +1,5 @@
 // CONFIGURAÇÃO · Edite estes valores para usar seus canais reais.
-const CTA_URL = '#contato';
+const CTA_URL = 'diagnostico.html';
 const EMAIL = ''; // Exemplo: 'contato@seudominio.com.br'
 const PHONE = ''; // Exemplo: '+5581999999999'
 const INSTAGRAM = ''; // Exemplo: 'https://www.instagram.com/seuperfil/'
