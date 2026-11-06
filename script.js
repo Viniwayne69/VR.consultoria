@@ -151,6 +151,19 @@ if ('ResizeObserver' in window) {
 updateAngles();
 if (document.fonts) document.fonts.ready.then(updateAngles);
 
+// Aba do navegador: quem sai ouve a tese do site, e quem volta é recebido.
+const pageTitle = document.title;
+let titleTimer;
+document.addEventListener('visibilitychange', () => {
+  clearTimeout(titleTimer);
+  if (document.hidden) {
+    document.title = 'O cliente que sai sem comprar também não volta';
+  } else {
+    document.title = 'Que bom que você voltou';
+    titleTimer = setTimeout(() => { document.title = pageTitle; }, 2500);
+  }
+});
+
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 // ANTES E DEPOIS ARRASTÁVEL · A linha (e o botão) separa a foto "antes" da "depois". Com mouse dá para arrastar em
@@ -158,6 +171,7 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 // Funciona com ou sem a classe "anim".
 const compare = document.querySelector('.ba');
 if (compare) {
+  const compareSection = compare.closest('.before-after');
   let position = 50;
   let dragging = false;
   let touched = false;
@@ -167,6 +181,10 @@ if (compare) {
     position = clamp(value, 0, 100);
     const rounded = Math.round(position);
     compare.style.setProperty('--pos', `${position.toFixed(2)}%`);
+    // Linha à direita = mais ANTES (a seção esfria); à esquerda = mais DEPOIS (a seção acende).
+    const lean = (position - 50) / 50;
+    compareSection.style.setProperty('--cool', Math.max(lean, 0).toFixed(3));
+    compareSection.style.setProperty('--glow', Math.max(-lean, 0).toFixed(3));
     compare.setAttribute('aria-valuenow', String(rounded));
     compare.setAttribute('aria-valuetext', rounded < 50 ? 'Mostrando mais o depois: cliente escolhendo você.'
       : rounded > 50 ? 'Mostrando mais o antes: cliente comparando preço.' : 'Metade antes, metade depois.');
@@ -246,13 +264,17 @@ if (document.documentElement.classList.contains('anim')) {
 
   // Título que sobe palavra por palavra, por trás de uma máscara. O texto lido pelo leitor de tela não muda.
   function splitTitle(element) {
-    element.setAttribute('aria-label', element.textContent.replace(/\s+/g, ' ').trim());
+    const labelSource = element.cloneNode(true);
+    labelSource.querySelectorAll('[aria-hidden="true"]').forEach((hidden) => hidden.remove());
+    element.setAttribute('aria-label', labelSource.textContent.replace(/\s+/g, ' ').trim());
     const fragment = document.createDocumentFragment();
     let index = 0;
     // Palavras soltas e também as que estão dentro de destaques (<span>) sobem uma a uma.
     (function split(parent, target) {
       parent.childNodes.forEach((node) => {
         if (node.nodeType === 1) {
+          // data-keep: bloco com animação própria (ex.: BARATO. → O DOBRO.), não é dividido em palavras.
+          if (node.hasAttribute('data-keep')) { target.appendChild(node.cloneNode(true)); return; }
           const copy = node.cloneNode(false);
           split(node, copy);
           target.appendChild(copy);
@@ -316,6 +338,7 @@ if (document.documentElement.classList.contains('anim')) {
   const parallaxItems = [];
   [['.symptom-card .symptom-image', 0.06, 9], ['.portrait-about', 0.06, 30], ['.pillar-card .number', 0.08, 14]]
     .forEach(([selector, speed, max]) => document.querySelectorAll(selector).forEach((element) => parallaxItems.push({ element, box: element.parentElement, speed, max })));
+  const symptoms = document.querySelector('.symptoms');
   let frame = 0;
   function onScroll() {
     frame = 0;
@@ -328,7 +351,12 @@ if (document.documentElement.classList.contains('anim')) {
       heroPortrait?.style.setProperty('--par', `${Math.min(y * 0.12, 56).toFixed(1)}px`);
       heroStamp?.style.setProperty('--rot', `${Math.min(y * 0.06, 24).toFixed(2)}deg`);
     }
+    // Sintomas: da chegada até a causa tomar a tela, a seção fica "parada" (fotos cinza, paralaxe congelada).
+    const symptomsBox = symptoms.getBoundingClientRect();
+    const frozen = symptomsBox.top < viewport * 0.7 && symptomsBox.bottom > viewport * 0.35;
+    symptoms.classList.toggle('is-frozen', frozen);
     parallaxItems.forEach(({ element, box, speed, max: limit }) => {
+      if (frozen && element.closest('.symptoms')) return;
       const rect = box.getBoundingClientRect();
       if (rect.bottom < -200 || rect.top > viewport + 200) return;
       const offset = rect.top + rect.height / 2 - viewport / 2;

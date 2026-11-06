@@ -28,6 +28,11 @@ p {text-wrap:pretty}
 .title-large {font-size:38px}
 .button {display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:16px 23px;background:var(--fogo);color:var(--tinta);font:700 12px/1.35 var(--body-font);letter-spacing:.015em;text-align:center;text-transform:uppercase;transition:background-color .18s ease;cursor:pointer}
 .button:hover {background:var(--fogo-claro)}
+.swap-label {display:grid;overflow:hidden}
+.swap-label>span {grid-area:1/1;transition:opacity .2s ease,transform .25s ease}
+.swap-b {opacity:0;transform:translateY(70%)}
+.button:is(:hover,:focus-visible,:active) .swap-a {opacity:0;transform:translateY(-70%)}
+.button:is(:hover,:focus-visible,:active) .swap-b {opacity:1;transform:none}
 .button-small {min-height:42px;padding:12px 17px;font-size:10px}
 .light-section {--focus-color:var(--vinho);background:var(--papel);color:var(--tinta)}
 .light-section .eyebrow {color:var(--fogo-escuro)}
@@ -73,6 +78,12 @@ p {text-wrap:pretty}
 .stamp {transform:rotate(-8deg)}
 .before-after {padding-block:48px}
 .before-after h2 {color:var(--vinho)}
+/* Ao arrastar para o ANTES a seção esfria (cinza); para o DEPOIS ela acende. O script escreve --cool e --glow (0 a 1). */
+@supports (color:color-mix(in srgb,red,blue)) {
+  .before-after {--cool:0;--glow:0;background-color:color-mix(in srgb,color-mix(in srgb,var(--papel),#FBF2DF calc(var(--glow) * 100%)),#A9ACB0 calc(var(--cool) * 100%));transition:background-color .6s ease}
+  .before-after h2 {color:color-mix(in srgb,color-mix(in srgb,var(--vinho),var(--vinho-vivo) calc(var(--glow) * 100%)),#3E4044 calc(var(--cool) * 100%));transition:color .6s ease}
+  .before-after .eyebrow {color:color-mix(in srgb,var(--fogo-escuro),#6F7276 calc(var(--cool) * 100%));transition:color .6s ease}
+}
 /* Comparador arrastável: --pos (0 a 100%) é escrito pelo script e move a linha, o botão e o recorte da imagem "depois" */
 .ba {--pos:50%;position:relative;overflow:hidden;max-width:1040px;margin:28px auto 0;aspect-ratio:3/2;border:1px solid var(--grafite);background:var(--cimento);touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .ba img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
@@ -109,6 +120,7 @@ p {text-wrap:pretty}
 .cause-grid {display:grid;gap:28px}
 .cause h2 {font-size:38px;max-width:580px;color:var(--vinho)}
 .cause h2 .hot {display:block;margin-top:.2em;color:var(--fogo-escuro)}
+.cause h2 .strike {text-decoration:none;background:linear-gradient(var(--fogo),var(--fogo)) 0 56%/100% .1em no-repeat;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .cause-cards {display:grid;gap:14px}
 .cause-card {background:var(--tinta) center/cover no-repeat;color:var(--papel);padding:26px}
 /* Texturas dos cartões: imagens geradas nas cores da marca (arquivos assets/textura-*.webp), escuras para o texto ficar legível */
@@ -378,16 +390,37 @@ body {overflow-x:clip}
   78% {transform:scale(1.06) rotate(-10deg)}
   100% {opacity:1;transform:scale(1) rotate(-8deg)}
 }
+/* Hero: BARATO. aparece, é riscado e cai; O DOBRO. sobe no lugar. Sem animação, só O DOBRO. aparece. */
+.dobro {display:inline-block;position:relative;overflow:hidden;vertical-align:top;padding:.16em .05em .1em;margin:-.16em -.05em -.1em}
+.dobro-new {display:inline-block;color:var(--fogo)}
+.dobro-old {display:none}
+.anim .dobro-old {display:block;position:absolute;left:.05em;top:.16em;white-space:nowrap;color:var(--cimento);opacity:0}
+.anim .dobro-old::after {content:'';position:absolute;left:-3%;right:-3%;top:52%;height:.11em;background:var(--fogo);transform:scaleX(0);transform-origin:left}
+.anim .dobro-new {transform:translate3d(0,118%,0)}
+@keyframes swapOld {0% {opacity:0;transform:translate3d(0,60%,0)} 18%,72% {opacity:1;transform:none} 100% {opacity:0;transform:translate3d(0,120%,0)}}
+@keyframes swapStrike {to {transform:scaleX(1)}}
+@keyframes swapNew {to {transform:none}}
+.anim .is-in .dobro-old {animation:swapOld 1.6s var(--ease) calc(var(--d,0ms) + 250ms) forwards}
+.anim .is-in .dobro-old::after {animation:swapStrike .35s var(--ease) calc(var(--d,0ms) + 950ms) forwards}
+.anim .is-in .dobro-new {animation:swapNew .7s var(--ease) calc(var(--d,0ms) + 1400ms) forwards}
 .anim .hero-visual.is-in .hero-stamp {animation:stampIn 1.1s var(--ease) 1.1s backwards}
 
 /* Antes e depois: a faixa laranja se desenha sobre "Cliente comparando preço." */
 .anim .crossed-out::after {transform:scaleX(0);transform-origin:left;transition:transform .8s var(--ease) .6s}
 .anim .ba-captions.is-in .crossed-out::after {transform:scaleX(1)}
 
+/* Causa: "A FALTA DE CLIENTES" é riscada ao vivo e só depois entra a resposta em laranja */
+.anim .cause h2 .strike {background-size:0% .1em;transition:background-size .5s var(--ease) 1.1s}
+.anim .cause h2.is-in .strike {background-size:100% .1em}
+.anim .cause h2 .hot .w>span {transition-delay:calc(var(--d,0ms) + var(--i,0) * 80ms + 1100ms)}
+
 /* Sintomas: o número gigante desliza para dentro */
 @keyframes dotsPulse {0%,100% {opacity:1} 50% {opacity:.15}}
 .anim .symptoms-title .dots {animation:dotsPulse 1.4s ease-in-out 1.6s infinite}
-.anim .symptom-card .symptom-image {transform:scale(1.28);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms)}
+.anim .symptom-card .symptom-image {transform:scale(1.28);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms),filter .35s ease}
+/* Sintomas: enquanto a seção está na tela a página "para" (fotos cinza, sem paralaxe nem inclinação) e a cor volta de uma vez na causa */
+.anim .symptoms.is-frozen .symptom-image {filter:grayscale(1) brightness(.8);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms),filter 1s ease}
+.anim .symptoms.is-frozen .symptom-card:hover {transform:none;box-shadow:none}
 .anim .symptom-card.is-in .symptom-image {transform:scale(1.12)}
 
 /* Causa: o bloco vinho com o corte de 10° desce e abre quando o primeiro item entra */
