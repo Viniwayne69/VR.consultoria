@@ -58,17 +58,17 @@ Use a pasta que contém `index.html` como raiz do projeto. Escolha um projeto es
 
 ## Imagens
 
-Os arquivos `assets/loja-antes.webp` e `assets/loja-depois.webp` (Antes e depois) e `assets/sintoma-*.webp` (cartões de sintomas) foram gerados com IA a partir de prompts próprios, em formato 3:2 (1536×1024). O Antes e o Depois mostram a mesma loja de shopping, com o mesmo enquadramento: no Antes ela está cinza e vazia, com um homem e uma mulher tristes; no Depois está viva, cheia de clientes, com os dois sorrindo. São pessoas fictícias. O carimbo e os demais elementos geométricos são SVGs editáveis.
+Os arquivos `assets/loja-antes.webp` e `assets/loja-depois.webp` (comparador Antes e depois) e `assets/sintoma-*.webp` (cartões de sintomas) foram gerados com IA a partir de prompts próprios, em formato 3:2 (1536×1024). O Antes e o Depois mostram a mesma loja de shopping, com o mesmo enquadramento: no Antes ela está cinza e vazia, com um homem e uma mulher tristes; no Depois está viva, cheia de clientes, com os dois sorrindo. São pessoas fictícias. O carimbo e os demais elementos geométricos são SVGs editáveis.
 
 ## Animações e interação
 
 Tudo está no fim de `styles.css` (bloco MOVIMENTO) e de `script.js` (bloco ANIMAÇÕES AO ROLAR). Só `transform`, `translate` e `opacity`, sem bibliotecas.
 
 - Entrada ao rolar: cada bloco sobe, cresce e aparece; os cartões lado a lado entram de lados opostos (no desktop). Os títulos sobem palavra por palavra, por trás de uma máscara. A lista do que anima fica em `revealGroups`, no `script.js`: para animar um elemento novo, acrescente o seletor lá.
-- Paralaxe: imagens dos cartões de sintomas, fotos do antes e depois, retrato de "Quem sou eu" e números dos pilares andam em velocidades diferentes do resto (lista `parallaxItems`).
+- Paralaxe: imagens dos cartões de sintomas, retrato de "Quem sou eu" e números dos pilares andam em velocidades diferentes do resto (lista `parallaxItems`).
 - Só com mouse: cartões que inclinam em 3D e botões que puxam o cursor (magnéticos). Em telas de toque nada disso é ligado.
 - Hero: o carimbo VR "bate" na página e gira de leve ao rolar, e o retângulo vinho do retrato anda mais devagar que o resto.
-- Antes e depois: a fachada ganha cor conforme a rolagem e a faixa laranja se desenha sobre "Marca ignorada".
+- Antes e depois: um comparador arrastável (`.ba` em `index.html`, lógica no bloco ANTES E DEPOIS ARRASTÁVEL do `script.js`). As duas fotos ficam sobrepostas e uma linha com botão redondo revela uma ou outra. Com mouse, arrasta-se em qualquer ponto da foto; no celular só o botão central responde, para a página continuar rolando; as setas do teclado movem 5% (Home e End vão às pontas). Ao aparecer na tela, a linha faz uma varredura de convite (0 → 100 → 0 → 100 → 50) se o visitante ainda não mexeu e se o sistema não pede "reduzir movimento". A faixa laranja se desenha sobre "Cliente comparando preço." nas legendas abaixo.
 - Sintomas, causa, pilares e método: números e cartões entram em sequência, o bloco vinho da causa abre e a linha entre as etapas do método se desenha.
 - FAQ: a resposta abre e fecha com a altura deslizando.
 - Barra de progresso laranja no topo, cabeçalho que ganha sombra ao rolar, cartões e botões que reagem ao mouse.

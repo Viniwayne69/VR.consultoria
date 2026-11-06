@@ -151,17 +151,88 @@ if ('ResizeObserver' in window) {
 updateAngles();
 if (document.fonts) document.fonts.ready.then(updateAngles);
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+// ANTES E DEPOIS ARRASTÁVEL · A linha (e o botão) separa a foto "antes" da "depois". Com mouse dá para arrastar em
+// qualquer ponto; no toque só o botão responde (o resto deixa a página rolar). As setas do teclado também movem.
+// Funciona com ou sem a classe "anim".
+const compare = document.querySelector('.ba');
+if (compare) {
+  let position = 50;
+  let dragging = false;
+  let touched = false;
+  const sweepTimers = [];
+
+  function setPosition(value) {
+    position = clamp(value, 0, 100);
+    const rounded = Math.round(position);
+    compare.style.setProperty('--pos', `${position.toFixed(2)}%`);
+    compare.setAttribute('aria-valuenow', String(rounded));
+    compare.setAttribute('aria-valuetext', rounded < 50 ? 'Mostrando mais o depois: cliente escolhendo você.'
+      : rounded > 50 ? 'Mostrando mais o antes: cliente comparando preço.' : 'Metade antes, metade depois.');
+  }
+  function moveTo(clientX) {
+    const rect = compare.getBoundingClientRect();
+    if (rect.width) setPosition((clientX - rect.left) / rect.width * 100);
+  }
+  // Qualquer toque do visitante cancela a varredura de convite.
+  function takeOver() {
+    touched = true;
+    sweepTimers.forEach(clearTimeout);
+    compare.classList.remove('is-sweeping');
+  }
+  function release() {
+    dragging = false;
+    compare.classList.remove('is-dragging');
+  }
+
+  compare.addEventListener('pointerdown', (event) => {
+    const onHandle = event.target.closest('.ba-handle');
+    if (event.pointerType === 'mouse' ? event.button !== 0 : !onHandle) return;
+    takeOver();
+    dragging = true;
+    compare.classList.add('is-dragging');
+    compare.setPointerCapture(event.pointerId);
+    moveTo(event.clientX);
+  });
+  compare.addEventListener('pointermove', (event) => { if (dragging) moveTo(event.clientX); });
+  compare.addEventListener('pointerup', release);
+  compare.addEventListener('pointercancel', release);
+
+  compare.addEventListener('keydown', (event) => {
+    const targets = { ArrowLeft: position - 5, ArrowRight: position + 5, Home: 0, End: 100 };
+    if (!(event.key in targets)) return;
+    event.preventDefault();
+    takeOver();
+    setPosition(targets[event.key]);
+  });
+
+  // Ao entrar na tela, a linha varre de ponta a ponta duas vezes e volta ao meio (se o visitante ainda não mexeu).
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    const sweepObserver = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      sweepObserver.disconnect();
+      if (touched) return;
+      compare.classList.add('is-sweeping');
+      [[0, 0], [900, 100], [1800, 0], [2700, 100], [3600, 50]].forEach(([delay, value]) => {
+        sweepTimers.push(setTimeout(() => setPosition(value), delay));
+      });
+      sweepTimers.push(setTimeout(() => compare.classList.remove('is-sweeping'), 4500));
+    }, { threshold: 0.6 });
+    sweepObserver.observe(compare);
+  }
+}
+
 // ANIMAÇÕES AO ROLAR · Só transform, translate e opacity. Sem JavaScript, ou com "reduzir movimento" no sistema,
 // a página aparece inteira e parada (a classe "anim" nem chega a ser ligada).
 if (document.documentElement.classList.contains('anim')) {
   const wide = () => window.innerWidth >= 768;
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
   // [seletor, atraso inicial em ms, passo entre irmãos em ms, 'lr' = no desktop entra de lados opostos]
   const revealGroups = [
     ['.hero-eyebrow', 0, 0], ['.hero h1', 120, 0], ['.hero-description', 520, 0], ['.hero .button', 680, 0], ['.hero-visual', 300, 0],
-    ['.before-after .eyebrow', 0, 0], ['.before-after h2', 60, 0], ['.comparison-card', 120, 160, 'lr'], ['.comparison-manifesto', 80, 0],
+    ['.before-after .eyebrow', 0, 0], ['.before-after h2', 60, 0], ['.ba', 120, 0], ['.ba-captions', 300, 0], ['.comparison-manifesto', 80, 0],
     ['.symptoms .eyebrow', 0, 0], ['.symptom-card', 100, 150, 'lr'],
     ['.cause .eyebrow', 0, 0], ['.cause h2', 60, 0], ['.cause-card', 160, 160, 'lr'],
     ['.pillars .eyebrow', 0, 0], ['.pillars h2', 60, 0], ['.pillar-card', 140, 150, 'lr'],
@@ -225,7 +296,7 @@ if (document.documentElement.classList.contains('anim')) {
     });
   });
 
-  // Barra de progresso, cabeçalho, paralaxe e o "antes e depois" que acende conforme a rolagem.
+  // Barra de progresso, cabeçalho e paralaxe.
   const progressBar = document.createElement('div');
   progressBar.className = 'scroll-progress';
   progressBar.setAttribute('aria-hidden', 'true');
@@ -233,11 +304,9 @@ if (document.documentElement.classList.contains('anim')) {
   const header = document.querySelector('.site-header');
   const heroPortrait = document.querySelector('.portrait-hero');
   const heroStamp = document.querySelector('.hero-stamp');
-  const beforeAfter = document.querySelector('.before-after');
-  const comparison = document.querySelector('.comparison-grid');
   // [seletor, velocidade, deslocamento máximo em px]: cada item desliza em relação ao resto da página.
   const parallaxItems = [];
-  [['.symptom-card .symptom-image', 0.06, 9], ['.comparison-image > img', 0.06, 9], ['.portrait-about', 0.06, 30], ['.pillar-card .number', 0.08, 14]]
+  [['.symptom-card .symptom-image', 0.06, 9], ['.portrait-about', 0.06, 30], ['.pillar-card .number', 0.08, 14]]
     .forEach(([selector, speed, max]) => document.querySelectorAll(selector).forEach((element) => parallaxItems.push({ element, box: element.parentElement, speed, max })));
   let frame = 0;
   function onScroll() {
@@ -250,10 +319,6 @@ if (document.documentElement.classList.contains('anim')) {
     if (y < viewport * 1.2) {
       heroPortrait?.style.setProperty('--par', `${Math.min(y * 0.12, 56).toFixed(1)}px`);
       heroStamp?.style.setProperty('--rot', `${Math.min(y * 0.06, 24).toFixed(2)}deg`);
-    }
-    if (comparison) {
-      const top = comparison.getBoundingClientRect().top;
-      beforeAfter.style.setProperty('--ba', clamp((viewport * 0.95 - top) / (viewport * 0.7), 0, 1).toFixed(3));
     }
     parallaxItems.forEach(({ element, box, speed, max: limit }) => {
       const rect = box.getBoundingClientRect();
