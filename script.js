@@ -151,23 +151,51 @@ if ('ResizeObserver' in window) {
 updateAngles();
 if (document.fonts) document.fonts.ready.then(updateAngles);
 
-// ANIMAÇÕES AO ROLAR · Só transform e opacity. Sem JavaScript, ou com "reduzir movimento" no sistema,
+// ANIMAÇÕES AO ROLAR · Só transform, translate e opacity. Sem JavaScript, ou com "reduzir movimento" no sistema,
 // a página aparece inteira e parada (a classe "anim" nem chega a ser ligada).
 if (document.documentElement.classList.contains('anim')) {
-  // [seletor, atraso inicial em ms, passo entre irmãos em ms]
+  const wide = () => window.innerWidth >= 768;
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  // [seletor, atraso inicial em ms, passo entre irmãos em ms, 'lr' = no desktop entra de lados opostos]
   const revealGroups = [
-    ['.hero-eyebrow', 0, 0], ['.hero h1', 120, 0], ['.hero-description', 380, 0], ['.hero .button', 520, 0], ['.hero-visual', 260, 0],
-    ['.before-after .eyebrow', 0, 0], ['.before-after h2', 80, 0], ['.comparison-card', 120, 140], ['.comparison-manifesto', 80, 0],
-    ['.symptoms .eyebrow', 0, 0], ['.symptom-card', 100, 130],
-    ['.cause-grid > div:first-child', 0, 0], ['.cause-card', 120, 140],
-    ['.pillars .eyebrow', 0, 0], ['.pillars h2', 80, 0], ['.pillar-card', 120, 130],
-    ['.method .eyebrow', 0, 0], ['.method h2', 80, 0], ['.method-steps li', 120, 160], ['.result-ribbon', 100, 0],
-    ['.about-copy', 0, 0], ['.portrait-about', 120, 0], ['.proof-card', 160, 130],
-    ['.audience-copy', 0, 0], ['.audience-details', 140, 0],
-    ['.faq .eyebrow', 0, 0], ['.faq h2', 80, 0], ['.faq-item', 100, 70],
-    ['.final-cta h2', 0, 0], ['.final-cta .button', 160, 0], ['.final-cta p', 260, 0],
+    ['.hero-eyebrow', 0, 0], ['.hero h1', 120, 0], ['.hero-description', 520, 0], ['.hero .button', 680, 0], ['.hero-visual', 300, 0],
+    ['.before-after .eyebrow', 0, 0], ['.before-after h2', 60, 0], ['.comparison-card', 120, 160, 'lr'], ['.comparison-manifesto', 80, 0],
+    ['.symptoms .eyebrow', 0, 0], ['.symptom-card', 100, 150, 'lr'],
+    ['.cause .eyebrow', 0, 0], ['.cause h2', 60, 0], ['.cause-card', 160, 160, 'lr'],
+    ['.pillars .eyebrow', 0, 0], ['.pillars h2', 60, 0], ['.pillar-card', 140, 150, 'lr'],
+    ['.method .eyebrow', 0, 0], ['.method h2', 60, 0], ['.method-steps li', 140, 180, 'lr'], ['.result-ribbon', 120, 0],
+    ['.about-copy .eyebrow', 0, 0], ['.manifesto', 60, 0], ['.about-copy > p:last-child', 360, 0], ['.portrait-about', 160, 0], ['.proof-card', 200, 140],
+    ['.audience-copy .eyebrow', 0, 0], ['.audience h2', 60, 0], ['.audience-copy > p:not(.eyebrow)', 300, 0], ['.audience-copy .button', 420, 0], ['.audience-details', 200, 0],
+    ['.faq .eyebrow', 0, 0], ['.faq h2', 60, 0], ['.faq-item', 120, 80],
+    ['.final-cta h2', 0, 0], ['.final-cta .button', 420, 0], ['.final-cta p', 560, 0],
     ['.footer-main', 0, 0], ['.footer-bottom', 100, 0],
   ];
+
+  // Título que sobe palavra por palavra, por trás de uma máscara. O texto lido pelo leitor de tela não muda.
+  function splitTitle(element) {
+    element.setAttribute('aria-label', element.textContent.replace(/\s+/g, ' ').trim());
+    const fragment = document.createDocumentFragment();
+    let index = 0;
+    element.childNodes.forEach((node) => {
+      if (node.nodeType !== 3) { fragment.appendChild(node.cloneNode(true)); return; }
+      node.textContent.split(/\s+/).filter(Boolean).forEach((word) => {
+        const mask = document.createElement('span');
+        const inner = document.createElement('span');
+        mask.className = 'w';
+        mask.setAttribute('aria-hidden', 'true');
+        inner.textContent = word;
+        inner.style.setProperty('--i', index++);
+        mask.appendChild(inner);
+        fragment.appendChild(mask);
+        fragment.appendChild(document.createTextNode(' '));
+      });
+    });
+    element.textContent = '';
+    element.appendChild(fragment);
+  }
+
   const revealObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
@@ -175,20 +203,29 @@ if (document.documentElement.classList.contains('anim')) {
       revealObserver.unobserve(element);
       element.classList.add('is-in');
       // Depois da entrada, a transição volta a ser rápida (hover), sem o atraso da escadinha.
-      setTimeout(() => element.classList.add('rv-done'), 1500);
+      setTimeout(() => element.classList.add('rv-done'), 2200);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
-  revealGroups.forEach(([selector, start, step]) => {
-    document.querySelectorAll(selector).forEach((element, index) => {
+
+  revealGroups.forEach(([selector, start, step, sides]) => {
+    const elements = [...document.querySelectorAll(selector)];
+    elements.forEach((element, index) => {
       element.classList.add('rv');
-      if (/^(H1|H2)$/.test(element.tagName)) element.classList.add('rv-title');
-      // A escadinha só faz sentido quando os cards estão lado a lado (no celular eles entram um a um).
-      element.style.setProperty('--d', `${start + (window.innerWidth >= 768 ? index * step : 0)}ms`);
+      if (/^H[12]$/.test(element.tagName) && !element.classList.contains('eyebrow')) {
+        element.classList.add('rv-title');
+        splitTitle(element);
+      }
+      if (sides && wide() && elements.length > 1) {
+        if (index === 0) element.classList.add('rv-l');
+        else if (index === elements.length - 1) element.classList.add('rv-r');
+      }
+      // A escadinha só faz sentido quando os cartões estão lado a lado (no celular eles entram um a um).
+      element.style.setProperty('--d', `${start + (wide() ? index * step : 0)}ms`);
       revealObserver.observe(element);
     });
   });
 
-  // Barra de progresso, cabeçalho, paralaxe do retrato e o "antes e depois" que acende conforme a rolagem.
+  // Barra de progresso, cabeçalho, paralaxe e o "antes e depois" que acende conforme a rolagem.
   const progressBar = document.createElement('div');
   progressBar.className = 'scroll-progress';
   progressBar.setAttribute('aria-hidden', 'true');
@@ -198,22 +235,32 @@ if (document.documentElement.classList.contains('anim')) {
   const heroStamp = document.querySelector('.hero-stamp');
   const beforeAfter = document.querySelector('.before-after');
   const comparison = document.querySelector('.comparison-grid');
-  const clamp01 = (value) => Math.min(1, Math.max(0, value));
+  // [seletor, velocidade, deslocamento máximo em px]: cada item desliza em relação ao resto da página.
+  const parallaxItems = [];
+  [['.symptom-card .giant-number', 0.16, 34], ['.comparison-image > img', 0.06, 9], ['.portrait-about', 0.06, 30], ['.pillar-card .number', 0.08, 14]]
+    .forEach(([selector, speed, max]) => document.querySelectorAll(selector).forEach((element) => parallaxItems.push({ element, box: element.parentElement, speed, max })));
   let frame = 0;
   function onScroll() {
     frame = 0;
     const y = window.scrollY;
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    progressBar.style.transform = `scaleX(${max > 0 ? clamp01(y / max).toFixed(4) : 0})`;
+    const viewport = window.innerHeight;
+    const max = document.documentElement.scrollHeight - viewport;
+    progressBar.style.transform = `scaleX(${max > 0 ? clamp(y / max, 0, 1).toFixed(4) : 0})`;
     header.classList.toggle('is-scrolled', y > 8);
-    if (y < window.innerHeight * 1.2) {
-      heroPortrait?.style.setProperty('--par', `${Math.min(y * 0.07, 36).toFixed(1)}px`);
-      heroStamp?.style.setProperty('--rot', `${Math.min(y * 0.035, 14).toFixed(2)}deg`);
+    if (y < viewport * 1.2) {
+      heroPortrait?.style.setProperty('--par', `${Math.min(y * 0.12, 56).toFixed(1)}px`);
+      heroStamp?.style.setProperty('--rot', `${Math.min(y * 0.06, 24).toFixed(2)}deg`);
     }
     if (comparison) {
       const top = comparison.getBoundingClientRect().top;
-      beforeAfter.style.setProperty('--ba', clamp01((window.innerHeight * 0.95 - top) / (window.innerHeight * 0.7)).toFixed(3));
+      beforeAfter.style.setProperty('--ba', clamp((viewport * 0.95 - top) / (viewport * 0.7), 0, 1).toFixed(3));
     }
+    parallaxItems.forEach(({ element, box, speed, max: limit }) => {
+      const rect = box.getBoundingClientRect();
+      if (rect.bottom < -200 || rect.top > viewport + 200) return;
+      const offset = rect.top + rect.height / 2 - viewport / 2;
+      element.style.translate = `0 ${clamp(-offset * speed, -limit, limit).toFixed(1)}px`;
+    });
   }
   window.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(onScroll); }, { passive: true });
   window.addEventListener('resize', onScroll);
@@ -232,4 +279,36 @@ if (document.documentElement.classList.contains('anim')) {
       });
     }, 200);
   }, { passive: true });
+
+  // Só com mouse: luz laranja que segue o cursor no hero, cartões que inclinam e botões que puxam o cursor.
+  if (finePointer) {
+    const hero = document.querySelector('.hero');
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      hero.style.setProperty('--mx', `${event.clientX - rect.left}px`);
+      hero.style.setProperty('--my', `${event.clientY - rect.top}px`);
+    });
+    document.querySelectorAll('.pillar-card, .cause-card, .symptom-card, .method-steps li, .proof-card').forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--ry', `${((event.clientX - rect.left) / rect.width - 0.5) * 9}deg`);
+        card.style.setProperty('--rx', `${-((event.clientY - rect.top) / rect.height - 0.5) * 9}deg`);
+      });
+      card.addEventListener('pointerleave', () => {
+        card.style.removeProperty('--rx');
+        card.style.removeProperty('--ry');
+      });
+    });
+    document.querySelectorAll('.button').forEach((button) => {
+      button.addEventListener('pointermove', (event) => {
+        const rect = button.getBoundingClientRect();
+        button.style.setProperty('--bx', `${clamp((event.clientX - rect.left - rect.width / 2) * 0.18, -8, 8).toFixed(1)}px`);
+        button.style.setProperty('--by', `${clamp((event.clientY - rect.top - rect.height / 2) * 0.28, -6, 6).toFixed(1)}px`);
+      });
+      button.addEventListener('pointerleave', () => {
+        button.style.removeProperty('--bx');
+        button.style.removeProperty('--by');
+      });
+    });
+  }
 }
