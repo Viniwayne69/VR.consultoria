@@ -108,6 +108,7 @@ p {text-wrap:pretty}
 .cause::before {content:'';z-index:-1;position:absolute;inset:0;background:var(--papel);clip-path:polygon(0 0,100% 0,100% calc(100% - 100px),calc(100% - 17.63px) 100%,0 100%)}
 .cause-grid {display:grid;gap:28px}
 .cause h2 {font-size:38px;max-width:580px;color:var(--vinho)}
+.cause h2 .hot {display:block;margin-top:.2em;color:var(--fogo-escuro)}
 .cause-cards {display:grid;gap:14px}
 .cause-card {background:var(--tinta) center/cover no-repeat;color:var(--papel);padding:26px}
 /* Texturas dos cartões: imagens geradas nas cores da marca (arquivos assets/textura-*.webp), escuras para o texto ficar legível */
