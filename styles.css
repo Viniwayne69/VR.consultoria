@@ -105,11 +105,11 @@ p {text-wrap:pretty}
 .symptom-card::after {content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to top,rgba(17,16,18,.95) 0%,rgba(17,16,18,.82) 34%,rgba(17,16,18,.25) 64%,rgba(17,16,18,0) 100%)}
 .symptom-card h3 {font:500 17px/1.4 var(--body-font);text-transform:none;letter-spacing:0}
 .cause {position:relative;background:transparent;padding:48px 0;isolation:isolate}
-.cause::before {content:'';z-index:-1;position:absolute;inset:0;background:var(--vinho-vivo);clip-path:polygon(0 0,100% 0,100% calc(100% - 100px),calc(100% - 17.63px) 100%,0 100%)}
+.cause::before {content:'';z-index:-1;position:absolute;inset:0;background:var(--papel);clip-path:polygon(0 0,100% 0,100% calc(100% - 100px),calc(100% - 17.63px) 100%,0 100%)}
 .cause-grid {display:grid;gap:28px}
-.cause h2 {font-size:38px;max-width:580px}
+.cause h2 {font-size:38px;max-width:580px;color:var(--vinho)}
 .cause-cards {display:grid;gap:14px}
-.cause-card {background:var(--tinta) center/cover no-repeat;padding:26px}
+.cause-card {background:var(--tinta) center/cover no-repeat;color:var(--papel);padding:26px}
 /* Texturas dos cartões: imagens geradas nas cores da marca (arquivos assets/textura-*.webp), escuras para o texto ficar legível */
 .cause-card:nth-child(1) {background-image:url(assets/textura-posicionamento.webp);background-position:center bottom}
 .cause-card:nth-child(2) {background-image:url(assets/textura-valor.webp);background-position:right bottom}
