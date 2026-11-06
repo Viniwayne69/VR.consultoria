@@ -417,9 +417,8 @@ body {overflow-x:clip}
 /* Sintomas: o número gigante desliza para dentro */
 @keyframes dotsPulse {0%,100% {opacity:1} 50% {opacity:.15}}
 .anim .symptoms-title .dots {animation:dotsPulse 1.4s ease-in-out 1.6s infinite}
-.anim .symptom-card .symptom-image {transform:scale(1.28);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms),filter .35s ease}
-/* Sintomas: enquanto a seção está na tela a página "para" (fotos cinza, sem paralaxe nem inclinação) e a cor volta de uma vez na causa */
-.anim .symptoms.is-frozen .symptom-image {filter:grayscale(1) brightness(.8);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms),filter 1s ease}
+.anim .symptom-card .symptom-image {transform:scale(1.28);transition:transform 1.6s var(--ease) calc(var(--d,0ms) + 120ms)}
+/* Sintomas: enquanto a seção está na tela a página "para": sem paralaxe e sem inclinação dos cartões, e o movimento volta na causa */
 .anim .symptoms.is-frozen .symptom-card:hover {transform:none;box-shadow:none}
 .anim .symptom-card.is-in .symptom-image {transform:scale(1.12)}
 

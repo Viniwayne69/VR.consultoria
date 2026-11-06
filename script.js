@@ -351,7 +351,7 @@ if (document.documentElement.classList.contains('anim')) {
       heroPortrait?.style.setProperty('--par', `${Math.min(y * 0.12, 56).toFixed(1)}px`);
       heroStamp?.style.setProperty('--rot', `${Math.min(y * 0.06, 24).toFixed(2)}deg`);
     }
-    // Sintomas: da chegada até a causa tomar a tela, a seção fica "parada" (fotos cinza, paralaxe congelada).
+    // Sintomas: da chegada até a causa tomar a tela, a seção fica "parada" (paralaxe e inclinação congeladas).
     const symptomsBox = symptoms.getBoundingClientRect();
     const frozen = symptomsBox.top < viewport * 0.7 && symptomsBox.bottom > viewport * 0.35;
     symptoms.classList.toggle('is-frozen', frozen);
