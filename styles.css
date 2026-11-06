@@ -324,3 +324,72 @@ p {text-wrap:pretty}
 @media(min-width:1100px) {
   .about-grid {grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,.9fr)}
 }
+
+/* ============ MOVIMENTO · entradas ao rolar, hover e detalhes interativos ============ */
+:root {--ease:cubic-bezier(.2,.7,.2,1)}
+
+/* Barra de progresso da leitura e cabeçalho que ganha corpo ao rolar */
+.scroll-progress {position:fixed;top:0;left:0;right:0;height:3px;background:var(--fogo);transform-origin:left;transform:scaleX(0);z-index:40;pointer-events:none}
+.site-header {transition:box-shadow .25s ease,border-color .25s ease}
+.site-header.is-scrolled {box-shadow:0 10px 26px rgba(0,0,0,.4);border-bottom-color:var(--vinho-vivo)}
+
+/* Entrada: sobe e aparece. O hero fica escondido já pelo CSS para não piscar antes do JavaScript. */
+.anim :where(.hero-eyebrow,.hero h1,.hero-description,.hero .button,.hero-visual),.anim .rv {opacity:0;transform:translate3d(0,30px,0)}
+.anim .rv-title {transform:translate3d(0,46px,0)}
+.anim .is-in {opacity:1;transform:none;transition:opacity .75s var(--ease) var(--d,0ms),transform .75s var(--ease) var(--d,0ms),background-color .18s ease}
+.anim .rv-done {transition:opacity .3s ease,transform .3s var(--ease),border-color .25s ease,background-color .18s ease,box-shadow .25s ease}
+
+/* Hero: o carimbo "bate" na página e gira de leve conforme a rolagem; o retângulo vinho anda mais devagar */
+.hero-stamp {transform:rotate(calc(-8deg + var(--rot,0deg)))}
+.portrait::before {transform:translate(16px,calc(-16px - var(--par,0px)))}
+@keyframes stampIn {
+  0% {opacity:0;transform:scale(1.9) rotate(-28deg)}
+  55% {opacity:1;transform:scale(.92) rotate(-5deg)}
+  100% {opacity:1;transform:scale(1) rotate(-8deg)}
+}
+.anim .hero-visual.is-in .hero-stamp {animation:stampIn .9s var(--ease) 1s backwards}
+
+/* Antes e depois: a imagem se aproxima e a fachada "depois" ganha cor enquanto você rola */
+.comparison-image>img {transform:scale(calc(1.1 - var(--ba,1) * .1))}
+.comparison-after .comparison-image>img {filter:saturate(calc(.25 + var(--ba,1) * .75))}
+.anim .crossed-out::after {transform:scaleX(0);transform-origin:left;transition:transform .7s var(--ease) .55s}
+.anim .comparison-card.is-in .crossed-out::after {transform:scaleX(1)}
+
+/* Sintomas: o número gigante desliza para dentro */
+.anim .symptom-card .giant-number {opacity:0;transform:translateX(-40px);transition:opacity .8s var(--ease) calc(var(--d,0ms) + 220ms),transform .8s var(--ease) calc(var(--d,0ms) + 220ms)}
+.anim .symptom-card.is-in .giant-number {opacity:1;transform:none}
+
+/* Causa: o bloco vinho com o corte de 10° desce e abre quando os cartões entram */
+@supports selector(:has(a)) {
+  .anim .cause::before {opacity:0;transform:scaleY(.55);transform-origin:top;transition:opacity .7s ease,transform .9s var(--ease)}
+  .anim .cause:has(.cause-card.is-in)::before,.anim .cause:has(.cause-grid>div.is-in)::before {opacity:1;transform:none}
+}
+
+/* Método: a linha entre as etapas se desenha */
+.anim .method-steps li+li::before {clip-path:inset(0 0 100% 0);transition:clip-path .6s var(--ease) calc(var(--d,0ms) + 350ms)}
+@media(min-width:768px) {
+  .anim .method-steps li+li::before {clip-path:inset(0 100% 0 0)}
+}
+.anim .method-steps li.is-in::before {clip-path:inset(0)}
+
+/* FAQ: a resposta abre deslizando e o + vira − */
+.faq-panel {overflow:hidden;transition:height .32s var(--ease)}
+.faq-icon::before,.faq-icon::after {transition:transform .25s ease,opacity .25s ease}
+.faq-item button[aria-expanded="true"] .faq-icon::after {display:block;opacity:0;transform:rotate(0deg)}
+
+/* Hover (só onde existe mouse): os cartões levantam e os botões brilham */
+.button {transition:background-color .18s ease,transform .2s var(--ease),box-shadow .2s ease}
+@media(hover:hover) {
+  .pillar-card,.symptom-card,.cause-card,.proof-card {transition:transform .3s var(--ease),border-color .25s ease,box-shadow .25s ease}
+  .pillar-card:hover,.proof-card:hover {transform:translateY(-6px);border-color:var(--fogo);box-shadow:0 16px 32px rgba(0,0,0,.4)}
+  .symptom-card:hover,.cause-card:hover {transform:translateY(-6px);box-shadow:0 16px 32px rgba(0,0,0,.4)}
+  .method-steps li {transition:transform .3s var(--ease),box-shadow .25s ease}
+  .method-steps li:hover {transform:translateY(-6px);box-shadow:0 16px 30px rgba(17,16,18,.22)}
+  .button:hover {transform:translateY(-2px);box-shadow:0 10px 26px rgba(240,96,26,.32)}
+  .light-section .button:hover {box-shadow:0 10px 26px rgba(110,20,35,.35)}
+  .button:active {transform:translateY(0)}
+}
+@media(prefers-reduced-motion:reduce) {
+  .comparison-image>img {transform:none}
+  .hero-stamp {transform:rotate(-8deg)}
+}

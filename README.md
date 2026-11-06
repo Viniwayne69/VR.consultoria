@@ -59,3 +59,15 @@ Use a pasta que contém `index.html` como raiz do projeto. Escolha um projeto es
 ## Imagens
 
 Os arquivos `assets/fachada-antes.webp` e `assets/fachada-depois.webp` derivam de uma composição criada com o gerador de imagens integrado. Briefing usado: a mesma pequena fachada brasileira vista de frente, com toldo, janela e porta central; antes apagada e sem pessoas em tons de tinta e papel; depois em vinho e papel com clientes anônimos na entrada; fotografia editorial com grão, sem texto, logotipo ou rosto identificável. O carimbo e os demais elementos geométricos são SVGs editáveis.
+
+## Animações e interação
+
+Tudo está no fim de `styles.css` (bloco MOVIMENTO) e de `script.js` (bloco ANIMAÇÕES AO ROLAR). Só `transform` e `opacity`, sem bibliotecas.
+
+- Entrada ao rolar: cada título, cartão e bloco sobe e aparece. A lista do que anima fica em `revealGroups`, no `script.js`: para animar um elemento novo, acrescente o seletor lá.
+- Hero: o carimbo VR "bate" na página e gira de leve ao rolar, e o retângulo vinho do retrato anda mais devagar que o resto.
+- Antes e depois: a fachada ganha cor conforme a rolagem e a faixa laranja se desenha sobre "Marca ignorada".
+- Sintomas, causa, pilares e método: números e cartões entram em sequência, o bloco vinho da causa abre e a linha entre as etapas do método se desenha.
+- FAQ: a resposta abre e fecha com a altura deslizando.
+- Barra de progresso laranja no topo, cabeçalho que ganha sombra ao rolar, cartões e botões que reagem ao mouse.
+- Quem ativa "reduzir movimento" no sistema vê a página parada: a classe `anim` nem chega a ser ligada. O mesmo vale sem JavaScript.

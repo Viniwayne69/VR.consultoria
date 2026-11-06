@@ -88,9 +88,32 @@ mobileViewport.addEventListener('change', () => closeMenu());
 
 // FAQ: um painel por vez. As setas e Home/End também navegam entre perguntas.
 const faqButtons = [...document.querySelectorAll('.faq-item button')];
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function setFaq(button, expanded) {
+  const panel = document.getElementById(button.getAttribute('aria-controls'));
+  const wasOpen = button.getAttribute('aria-expanded') === 'true';
   button.setAttribute('aria-expanded', String(expanded));
-  document.getElementById(button.getAttribute('aria-controls')).hidden = !expanded;
+  clearTimeout(panel.faqTimer);
+  // Sem animação (movimento reduzido) ou sem mudança de estado: só mostra ou esconde.
+  if (reduceMotion || wasOpen === expanded) {
+    panel.hidden = !expanded;
+    panel.style.height = '';
+    return;
+  }
+  // Abre e fecha com a altura deslizando.
+  if (expanded) {
+    panel.hidden = false;
+    const full = panel.scrollHeight;
+    panel.style.height = '0px';
+    panel.offsetHeight; // força o navegador a registrar a altura inicial
+    panel.style.height = `${full}px`;
+    panel.faqTimer = setTimeout(() => { panel.style.height = ''; }, 360);
+  } else {
+    panel.style.height = `${panel.scrollHeight}px`;
+    panel.offsetHeight;
+    panel.style.height = '0px';
+    panel.faqTimer = setTimeout(() => { panel.hidden = true; panel.style.height = ''; }, 360);
+  }
 }
 faqButtons.forEach((button, index) => {
   button.addEventListener('click', () => {
@@ -127,3 +150,86 @@ if ('ResizeObserver' in window) {
 }
 updateAngles();
 if (document.fonts) document.fonts.ready.then(updateAngles);
+
+// ANIMAÇÕES AO ROLAR · Só transform e opacity. Sem JavaScript, ou com "reduzir movimento" no sistema,
+// a página aparece inteira e parada (a classe "anim" nem chega a ser ligada).
+if (document.documentElement.classList.contains('anim')) {
+  // [seletor, atraso inicial em ms, passo entre irmãos em ms]
+  const revealGroups = [
+    ['.hero-eyebrow', 0, 0], ['.hero h1', 120, 0], ['.hero-description', 380, 0], ['.hero .button', 520, 0], ['.hero-visual', 260, 0],
+    ['.before-after .eyebrow', 0, 0], ['.before-after h2', 80, 0], ['.comparison-card', 120, 140], ['.comparison-manifesto', 80, 0],
+    ['.symptoms .eyebrow', 0, 0], ['.symptom-card', 100, 130],
+    ['.cause-grid > div:first-child', 0, 0], ['.cause-card', 120, 140],
+    ['.pillars .eyebrow', 0, 0], ['.pillars h2', 80, 0], ['.pillar-card', 120, 130],
+    ['.method .eyebrow', 0, 0], ['.method h2', 80, 0], ['.method-steps li', 120, 160], ['.result-ribbon', 100, 0],
+    ['.about-copy', 0, 0], ['.portrait-about', 120, 0], ['.proof-card', 160, 130],
+    ['.audience-copy', 0, 0], ['.audience-details', 140, 0],
+    ['.faq .eyebrow', 0, 0], ['.faq h2', 80, 0], ['.faq-item', 100, 70],
+    ['.final-cta h2', 0, 0], ['.final-cta .button', 160, 0], ['.final-cta p', 260, 0],
+    ['.footer-main', 0, 0], ['.footer-bottom', 100, 0],
+  ];
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const element = entry.target;
+      revealObserver.unobserve(element);
+      element.classList.add('is-in');
+      // Depois da entrada, a transição volta a ser rápida (hover), sem o atraso da escadinha.
+      setTimeout(() => element.classList.add('rv-done'), 1500);
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+  revealGroups.forEach(([selector, start, step]) => {
+    document.querySelectorAll(selector).forEach((element, index) => {
+      element.classList.add('rv');
+      if (/^(H1|H2)$/.test(element.tagName)) element.classList.add('rv-title');
+      // A escadinha só faz sentido quando os cards estão lado a lado (no celular eles entram um a um).
+      element.style.setProperty('--d', `${start + (window.innerWidth >= 768 ? index * step : 0)}ms`);
+      revealObserver.observe(element);
+    });
+  });
+
+  // Barra de progresso, cabeçalho, paralaxe do retrato e o "antes e depois" que acende conforme a rolagem.
+  const progressBar = document.createElement('div');
+  progressBar.className = 'scroll-progress';
+  progressBar.setAttribute('aria-hidden', 'true');
+  document.body.prepend(progressBar);
+  const header = document.querySelector('.site-header');
+  const heroPortrait = document.querySelector('.portrait-hero');
+  const heroStamp = document.querySelector('.hero-stamp');
+  const beforeAfter = document.querySelector('.before-after');
+  const comparison = document.querySelector('.comparison-grid');
+  const clamp01 = (value) => Math.min(1, Math.max(0, value));
+  let frame = 0;
+  function onScroll() {
+    frame = 0;
+    const y = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.transform = `scaleX(${max > 0 ? clamp01(y / max).toFixed(4) : 0})`;
+    header.classList.toggle('is-scrolled', y > 8);
+    if (y < window.innerHeight * 1.2) {
+      heroPortrait?.style.setProperty('--par', `${Math.min(y * 0.07, 36).toFixed(1)}px`);
+      heroStamp?.style.setProperty('--rot', `${Math.min(y * 0.035, 14).toFixed(2)}deg`);
+    }
+    if (comparison) {
+      const top = comparison.getBoundingClientRect().top;
+      beforeAfter.style.setProperty('--ba', clamp01((window.innerHeight * 0.95 - top) / (window.innerHeight * 0.7)).toFixed(3));
+    }
+  }
+  window.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(onScroll); }, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  // Rede de segurança: numa rolagem muito rápida, o que ficou para trás da tela sem aparecer é revelado na hora.
+  let settleTimer;
+  window.addEventListener('scroll', () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => {
+      document.querySelectorAll('.rv:not(.is-in)').forEach((element) => {
+        if (element.getBoundingClientRect().bottom < 0) {
+          revealObserver.unobserve(element);
+          element.classList.add('is-in', 'rv-done');
+        }
+      });
+    }, 200);
+  }, { passive: true });
+}
