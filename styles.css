@@ -111,7 +111,9 @@ p {text-wrap:pretty}
 .cause-cards {display:grid;gap:14px}
 .cause-card {background:var(--tinta);padding:26px}
 .cause-card h3 {color:var(--fogo);font-size:28px;margin-bottom:12px}
-.cause-card p {font-size:18px;line-height:1.45;max-width:240px}
+.cause-card p {font-size:18px;line-height:1.45}
+.cause-card .cause-root {margin-top:16px;padding-top:14px;border-top:1px solid rgba(236,229,216,.2);font-size:14px;line-height:1.5;color:var(--cimento)}
+.cause-root strong {color:var(--fogo)}
 .pillars {padding:48px 0}
 .pillars h2 {max-width:920px}
 .pillar-grid {display:grid;gap:14px;margin-top:28px}
