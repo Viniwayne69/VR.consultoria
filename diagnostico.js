@@ -75,14 +75,14 @@ const padroes = [
 
 const t = {
   boasVindas: {
-    rotulo: 'Diagnóstico gratuito',
+    rotulo: 'Diagnóstico',
     antes: 'O QUANTO A SUA MARCA É',
     destaque: 'DESEJADA',
     depois: 'HOJE?',
     paragrafo: 'Descubra o que pode estar impedindo sua marca de vender mais, com resultado na hora',
     recebe: ['Sua nota de desejo, de 1 a 10', 'Onde crescer mais', 'O primeiro passo'],
     fotoAlt: 'Imagem ilustrativa: a fachada de uma loja de shopping cheia de clientes e iluminada.',
-    botao: 'Iniciar diagnóstico gratuito',
+    botao: 'Iniciar diagnóstico',
   },
   som: 'Ouça o áudio sobre o diagnóstico',
   somCurto: 'Som',
