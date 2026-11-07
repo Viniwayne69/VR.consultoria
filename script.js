@@ -10,6 +10,10 @@ const PHOTO_ALT = 'Retrato de Vinicius Ribeiro, consultor de marca e vendas.';
 
 document.querySelectorAll('[data-cta]').forEach((link) => {
   link.setAttribute('href', CTA_URL);
+  // O diagnóstico abre com o som ligado: o clique deixa um recado, e a página do diagnóstico liga o áudio ao carregar.
+  link.addEventListener('click', () => {
+    try { sessionStorage.setItem('vr-som', '1'); } catch { /* sem armazenamento, o som liga no botão Iniciar */ }
+  });
 });
 
 const contactDestinations = {

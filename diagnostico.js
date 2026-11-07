@@ -531,6 +531,9 @@ const som = (function () {
   });
   window.addEventListener('pagehide', () => audio?.pause());
   caixa.append(botao);
+  // Veio do botão de diagnóstico do site: tenta ligar já ao carregar (o Chrome libera, pois o clique foi no mesmo site)
+  // Se o navegador negar, o som liga no botão "Iniciar diagnóstico" da primeira tela
+  try { if (sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar(); } } catch { /* sem armazenamento */ }
   // Chamado pelo botão "Iniciar diagnóstico": o toque da pessoa libera o áudio no navegador
   return { ligarAoIniciar() { if (!manual && !ligado()) tocar(); } };
 })();
