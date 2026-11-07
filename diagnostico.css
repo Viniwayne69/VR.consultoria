@@ -224,9 +224,12 @@ html.dx-embutido {overscroll-behavior:none}
   /* Perguntas de digitar (nome, negócio, WhatsApp): ficam no alto da tela, porque o teclado abre embaixo e cobriria o campo */
   .dx-main:has(.dx-field) {align-items:flex-start;padding-top:24px}
   .dx:has(.dx-welcome) {height:100vh;height:100dvh;min-height:0;overflow:hidden}
-  .dx:has(.dx-welcome) .dx-main {min-height:0;padding-block:0}
+  .dx:has(.dx-welcome) .dx-main {min-height:0;padding-block:0;align-items:stretch}
+  .dx:has(.dx-welcome) .dx-stage {display:grid;grid-template-rows:minmax(0,1fr)}
+  /* o que sobrar de altura é repartido entre título, orbe e botão (o botão desce e o orbe cresce) */
+  .dx-welcome {align-self:stretch;height:100%;align-content:space-evenly;padding-block:2dvh}
   .dx-welcome h1 {font-size:min(13vw,5.2dvh);line-height:1}
-  .dx-orb {width:min(68vw,260px,25dvh);margin-bottom:-4px}
+  .dx-orb {width:min(94vw,420px,38dvh);margin-block:-3dvh}
   .dx-go {margin-top:min(20px,2.4dvh);padding:min(24px,3.2dvh) 26px}
   .dx .dx-go-btn {min-height:min(76px,9.4dvh);font-size:min(15px,2.3dvh)}
   .dx-go-note {margin-top:min(24px,3.4dvh);font-size:min(11px,1.7dvh)}
