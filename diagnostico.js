@@ -3,7 +3,7 @@
 // CONFIGURAÇÃO · WhatsApp que recebe o resultado, com DDI e DDD, só números (exemplo: '5581999999999').
 // Vazio: o WhatsApp abre só com a mensagem pronta e a pessoa escolhe o contato.
 const WHATSAPP_NUMBER = '';
-const SOM_ARQUIVO = 'assets/audio/get-away.mp3';
+const SOM_ARQUIVO = 'assets/audio/diagnostico-vinicius.mp3';
 
 // ============================ Conteúdo: perguntas, áreas e perfis ============================
 // Para mudar uma pergunta, opção, perfil ou rótulo, edite aqui: o resto só lê destes dados.
@@ -82,7 +82,7 @@ const t = {
     fotoAlt: 'Imagem ilustrativa: a fachada de uma loja de shopping cheia de clientes e iluminada.',
     botao: 'Iniciar diagnóstico gratuito',
   },
-  som: 'Escute um som enquanto nos conta sobre você',
+  som: 'Ouça o áudio sobre o diagnóstico',
   somCurto: 'Som',
   somLigado: 'Som ligado',
   ok: 'OK',
@@ -504,8 +504,9 @@ function contarNota(alvo) {
 document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-1, estado.etapa - 1)));
 
 /**
- * Botão de som: o navegador só deixa o áudio tocar depois de um toque da pessoa, então a música só é baixada e começa
- * quando ela liga. Fica em loop, com volume baixo, e para ao sair da página.
+ * Botão de som: o áudio do Vinicius explicando o diagnóstico (26 segundos). O navegador só deixa o áudio tocar depois de um
+ * toque da pessoa, então ele só é baixado e começa quando ela liga (ou veio do botão do site). Toca uma vez, volta ao botão
+ * desligado quando termina e para ao sair da página.
  */
 (function som() {
   const caixa = document.getElementById('dx-sound');
@@ -520,7 +521,7 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
   pintar(false);
   const ligado = () => botao.getAttribute('aria-pressed') === 'true';
   async function tocar() {
-    if (!audio) { audio = new Audio(SOM_ARQUIVO); audio.loop = true; audio.volume = 0.35; }
+    if (!audio) { audio = new Audio(SOM_ARQUIVO); audio.addEventListener('ended', () => pintar(false)); }
     try { await audio.play(); pintar(true); } catch { pintar(false); }
   }
   botao.addEventListener('click', () => {
