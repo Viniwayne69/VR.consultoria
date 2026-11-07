@@ -605,6 +605,10 @@ const ORBE_FRAG = `
     float size = min(iResolution.x, iResolution.y);
     vec2 uv = (fragCoord - center) / size * 2.0;
 
+    // Margem de folga: o brilho se apaga antes da borda do canvas, sem aparecer um quadrado
+    float borda = 1.0 - smoothstep(0.7, 1.0, length(uv));
+    uv *= 1.3;
+
     // A voz infla o orbe
     uv /= 1.0 + uLevel * 0.2;
 
@@ -616,6 +620,7 @@ const ORBE_FRAG = `
     uv.y += hover * hoverIntensity * 0.1 * sin(uv.x * 10.0 + iTime);
 
     vec4 col = draw(uv);
+    col.a *= borda;
     gl_FragColor = vec4(col.rgb * col.a, col.a);
   }
 `;
