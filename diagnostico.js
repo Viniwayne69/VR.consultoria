@@ -3,9 +3,9 @@
 // CONFIGURAÇÃO · WhatsApp que recebe o resultado, com DDI e DDD, só números (exemplo: '5581999999999').
 // Vazio: o WhatsApp abre só com a mensagem pronta e a pessoa escolhe o contato.
 const WHATSAPP_NUMBER = '';
-const SOM_ARQUIVO = 'assets/audio/diagnostico-vinicius.mp3';
-// Som desligado por enquanto: com false o ícone "Som" continua no cabeçalho, mas nada toca (nem ao clicar). Troque para true para ligar o áudio de novo.
-const SOM_ATIVO = false;
+const SOM_ARQUIVO = 'assets/audio/diagnostico.mp3';
+// Som ligado: com false o ícone "Som" continua no cabeçalho, mas nada toca (nem ao clicar).
+const SOM_ATIVO = true;
 
 // ============================ Conteúdo: perguntas, áreas e perfis ============================
 // Para mudar uma pergunta, opção, perfil ou rótulo, edite aqui: o resto só lê destes dados.
@@ -506,7 +506,7 @@ function contarNota(alvo) {
 document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-1, estado.etapa - 1)));
 
 /**
- * Botão de som: o áudio do Vinicius explicando o diagnóstico (26 segundos). O navegador só deixa o áudio tocar depois de um
+ * Botão de som: o áudio explicando o diagnóstico (cerca de 25 segundos). O navegador só deixa o áudio tocar depois de um
  * toque da pessoa, então ele só é baixado e começa quando ela liga (ou veio do botão do site). Toca uma vez, volta ao botão
  * desligado quando termina e para ao sair da página.
  */
