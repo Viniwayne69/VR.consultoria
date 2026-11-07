@@ -349,7 +349,7 @@ function botaoGrande() {
     h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
     h('div', { class: 'dx-go-key' },
       h('span', { class: 'dx-go-depth', 'aria-hidden': 'true' }),
-      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => ir(0) }, t.boasVindas.botao)));
+      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => { som.ligar(); ir(0); } }, t.boasVindas.botao)));
   inclinarBotao(caixa);
   return caixa;
 }
@@ -777,6 +777,7 @@ const som = (function () {
   let audio = null;
   // No iPhone o Safari só deixa o áudio tocar depois de um toque, e o som que passa pelo Web Audio é mudo com a chave de silencioso
   const ehIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let tocouUmaVez = false; // o áudio toca uma vez só: depois disso o botão não liga de novo
   let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
   let dados = null;
   // O áudio passa por um analisador (Web Audio) antes de sair. Só entra no caminho se o navegador deixar o contexto rodar:
@@ -804,7 +805,7 @@ const som = (function () {
       audio.preload = 'auto';
       if (!ehIOS) await prepararAnalise(); // no iPhone o play() tem de sair direto do toque, sem esperar nada
     }
-    try { await audio.play(); return true; } catch { return false; /* o navegador não deixou tocar sem um toque da pessoa */ }
+    try { await audio.play(); tocouUmaVez = true; return true; } catch { return false; /* o navegador não deixou tocar sem um toque da pessoa */ }
   }
   // Se o navegador bloqueou o som ao carregar (iPhone), ele começa no primeiro toque da pessoa na página
   function aguardarToque() {
@@ -823,6 +824,8 @@ const som = (function () {
   try { if (SOM_ATIVO && sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar().then((ok) => { if (!ok) aguardarToque(); }); } } catch { /* sem armazenamento */ }
 
   return {
+    /** Liga o áudio dentro do toque da pessoa (o botão Iniciar diagnóstico), se ele ainda não tocou. */
+    ligar() { if (SOM_ATIVO && !tocouUmaVez) tocar(); },
     /**
      * O que a voz está fazendo agora: volume geral, graves, médios e agudos (de 0 a 1) e o andamento do áudio (0 a 1).
      * Com o áudio parado tudo é 0; depois que ele acaba o andamento fica em 1.
