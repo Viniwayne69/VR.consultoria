@@ -73,6 +73,7 @@ const padroes = [
 
 const t = {
   boasVindas: {
+    rotulo: 'Diagnóstico gratuito',
     antes: 'O QUANTO A SUA MARCA É',
     destaque: 'DESEJADA',
     depois: 'HOJE?',
@@ -82,6 +83,8 @@ const t = {
     botao: 'Iniciar diagnóstico gratuito',
   },
   som: 'Escute um som enquanto nos conta sobre você',
+  somCurto: 'Som',
+  somLigado: 'Som ligado',
   ok: 'OK',
   dicaEnter: 'ou pressione Enter',
   voltar: 'Voltar',
@@ -99,6 +102,7 @@ const t = {
     medidorExtremos: ['Pouco', 'Muito'],
     whatsappBotao: 'Falar com o Vinicius no WhatsApp',
     calculando: 'Calculando o seu resultado',
+    passos: ['Lendo as suas respostas', 'Cruzando as seis áreas', 'Achando o ponto mais fraco'],
     pontoFraco: 'Resolver agora',
     radarTitulo: 'A sua marca por área',
     toque: 'Toque em uma área',
@@ -188,11 +192,16 @@ const total = perguntas.length;
 const respostas = Object.fromEntries(perguntas.map((p) => [p.id, '']));
 const estado = { etapa: -1, direcao: 'frente', calculando: false, armadilha: '' };
 
+const raiz = document.getElementById('dx');
 const palco = document.getElementById('dx-stage');
-const barra = document.getElementById('dx-bar');
+const progresso = document.getElementById('dx-bar');
 const nav = document.getElementById('dx-nav');
 let erroEl = null;
 let contagemFrame = 0;
+
+// Progresso: uma lâmina inclinada por pergunta
+const laminas = Array.from({ length: total }, () => h('span'));
+progresso.append(...laminas);
 
 const primeiroNome = () => capitalizar((respostas.nome.trim().split(/\s+/)[0]) || '');
 
@@ -257,11 +266,12 @@ function desenhar() {
   const { etapa } = estado;
   const emPergunta = etapa >= 0 && etapa < total;
   const resultado = etapa === total && !estado.calculando;
-  const larga = etapa === -1 || resultado;
 
-  barra.style.width = `${etapa < 0 ? 0 : Math.min(100, Math.round((etapa / total) * 100))}%`;
+  laminas.forEach((lamina, i) => {
+    lamina.className = etapa >= total || i < etapa ? 'is-done' : i === etapa ? 'is-now' : '';
+  });
+  raiz.classList.toggle('is-claro', resultado);
   nav.hidden = !emPergunta;
-  palco.className = `dx-stage${larga ? ' is-wide' : ''}`;
 
   let conteudo;
   if (etapa === -1) conteudo = telaBoasVindas();
@@ -282,14 +292,18 @@ function desenhar() {
 // ---------- Boas-vindas ----------
 function telaBoasVindas() {
   return h('div', { class: 'dx-welcome' },
-    h('div', { class: 'dx-photo' },
-      h('img', { src: 'assets/loja-depois.webp', alt: t.boasVindas.fotoAlt, width: 1536, height: 1024 }),
-      h('div', { class: 'dx-mist', 'aria-hidden': 'true' })),
-    h('div', {},
+    h('div', { class: 'dx-welcome-copy' },
+      h('p', { class: 'eyebrow' }, t.boasVindas.rotulo),
       h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
-      h('p', {}, t.boasVindas.paragrafo),
-      h('button', { type: 'button', class: 'button brilho', onclick: () => ir(0) }, t.boasVindas.botao),
-      h('ul', { class: 'dx-gets' }, t.boasVindas.recebe.map((item) => h('li', {}, item)))));
+      h('p', { class: 'dx-lead' }, t.boasVindas.paragrafo),
+      h('button', { type: 'button', class: 'button', onclick: () => ir(0) }, t.boasVindas.botao)),
+    h('div', { class: 'dx-visual' },
+      h('div', { class: 'dx-photo' },
+        h('div', { class: 'dx-photo-frame' },
+          h('img', { src: 'assets/loja-depois.webp', alt: t.boasVindas.fotoAlt, width: 1536, height: 1024 }))),
+      h('img', { class: 'stamp dx-stamp', src: 'assets/carimbo-vr.svg', alt: '', 'aria-hidden': 'true', width: 148, height: 148 })),
+    h('ol', { class: 'dx-gets' }, t.boasVindas.recebe.map((item, i) =>
+      h('li', {}, h('b', { class: 'number' }, doisDigitos(i + 1)), h('span', {}, item)))));
 }
 
 // ---------- Pergunta ----------
@@ -300,9 +314,12 @@ function telaPergunta(pergunta) {
   const incentivo = etapa === total - 1 ? t.incentivos.ultima : etapa === total - 3 ? t.incentivos.quaseLa : '';
   erroEl = h('p', { id: 'dx-erro', role: 'alert', class: 'dx-error' });
 
+  const contador = h('p', { class: 'dx-count', 'aria-label': `Pergunta ${etapa + 1} ${t.de} ${total}` },
+    h('b', { 'aria-hidden': 'true' }, doisDigitos(etapa + 1)),
+    h('span', { 'aria-hidden': 'true' }, `/${doisDigitos(total)}`),
+    incentivo && h('em', {}, incentivo));
   const cabecalho = [
-    h('p', { class: 'dx-count' }, `${doisDigitos(etapa + 1)} `, h('span', {}, `${t.de} ${doisDigitos(total)}`), incentivo && h('em', {}, incentivo)),
-    h('h1', { id: 'dx-pergunta', class: 'dx-q', tabindex: '-1' }, titulo),
+    h('h1', { id: 'dx-pergunta', class: 'dx-display dx-q', tabindex: '-1' }, titulo),
     pergunta.ajuda && h('p', { class: 'dx-help' }, pergunta.ajuda),
   ];
 
@@ -323,11 +340,12 @@ function telaPergunta(pergunta) {
       },
       onkeydown: (e) => { if (e.key === 'Enter') { e.preventDefault(); avancar(); } },
     });
-    return h('div', {}, cabecalho, campo,
-      h('div', { class: 'dx-row' },
-        h('button', { type: 'button', class: 'button brilho', onclick: avancar }, pergunta.id === 'telefone' ? t.ver : t.ok),
-        h('span', { class: 'dx-hint' }, t.dicaEnter)),
-      erroEl);
+    return h('div', { class: 'dx-ask' }, contador,
+      h('div', { class: 'dx-ask-main' }, cabecalho, campo,
+        h('div', { class: 'dx-row' },
+          h('button', { type: 'button', class: 'button', onclick: avancar }, pergunta.id === 'telefone' ? t.ver : t.ok),
+          h('span', { class: 'dx-hint' }, t.dicaEnter)),
+        erroEl));
   }
 
   const opcoes = pergunta.opcoes.map((opcao, i) => {
@@ -340,17 +358,19 @@ function telaPergunta(pergunta) {
     }, h('span', { class: 'dx-key', 'aria-hidden': 'true' }, String.fromCharCode(65 + i)), opcao);
     return botao;
   });
-  return h('div', {}, cabecalho,
-    h('div', { role: 'group', 'aria-labelledby': 'dx-pergunta', class: `dx-options${pergunta.opcoes.length > 4 ? ' is-two' : ''}` }, opcoes),
-    erroEl);
+  return h('div', { class: 'dx-ask' }, contador,
+    h('div', { class: 'dx-ask-main' }, cabecalho,
+      h('div', { role: 'group', 'aria-labelledby': 'dx-pergunta', class: `dx-options${pergunta.opcoes.length > 4 ? ' is-two' : ''}` }, opcoes),
+      erroEl));
 }
 
-// ---------- Antecipação: as barras acendem uma a uma enquanto o resultado "carrega" ----------
+// ---------- Antecipação: o carimbo gira, as frases trocam e a faixa de listras enche ----------
 function telaCalculando() {
   return h('div', { class: 'dx-calc', role: 'status' },
-    h('p', {}, t.resultado.calculando),
-    h('div', { class: 'dx-bars', 'aria-hidden': 'true' },
-      Array.from({ length: 10 }, (_, i) => h('span', { style: `animation-delay:${i * 250}ms` }))));
+    h('img', { class: 'stamp', src: 'assets/carimbo-vr.svg', alt: '', 'aria-hidden': 'true', width: 132, height: 132 }),
+    h('p', { class: 'eyebrow' }, t.resultado.calculando),
+    h('p', { class: 'dx-passos', 'aria-hidden': 'true' }, t.resultado.passos.map((texto, i) => h('span', { style: `animation-delay:${i}s` }, texto))),
+    h('div', { class: 'dx-calc-bar', 'aria-hidden': 'true' }, h('span')));
 }
 
 // ---------- Resultado em cena: medidor, radar das áreas, ponto mais fraco e WhatsApp ----------
@@ -381,17 +401,17 @@ function telaResultado(resultado) {
   const ang = -90 + nota * 18;
   const palavras = perfil.titulo.split(' ');
 
-  // Medidor em arco: o ponteiro varre até a nota, passa um pouco e volta
+  // Medidor em arco (os cartões são escuros, então tudo aqui é papel e laranja sobre tinta): o ponteiro varre até a nota, passa um pouco e volta
   const ticks = [0, 2, 4, 6, 8, 10].map((v) => {
     const a = Math.PI * (1 - v / 10);
-    return `<text x="${(120 + 114 * Math.cos(a)).toFixed(1)}" y="${(120 - 114 * Math.sin(a)).toFixed(1)}" font-size="9" font-weight="600" fill="#111012" fill-opacity="0.6" text-anchor="middle" dominant-baseline="middle">${v}</text>`;
+    return `<text x="${(120 + 114 * Math.cos(a)).toFixed(1)}" y="${(120 - 114 * Math.sin(a)).toFixed(1)}" font-size="9" font-weight="700" fill="#CDC5B5" text-anchor="middle" dominant-baseline="middle">${v}</text>`;
   }).join('');
   const medidor = svg(
-    `<path d="M 20 120 A 100 100 0 0 1 220 120" pathLength="100" fill="none" stroke="#111012" stroke-opacity="0.1" stroke-width="14" stroke-linecap="round"/>` +
-    `<path d="M 20 120 A 100 100 0 0 1 220 120" pathLength="100" fill="none" stroke="#F0601A" stroke-width="14" stroke-linecap="round" class="arco-enche" style="--off:${100 - nota * 10};filter:drop-shadow(0 0 7px rgba(240,96,26,.85))"/>` +
-    `<g class="ponteiro" style="--ang:${ang}deg"><line x1="120" y1="120" x2="120" y2="42" stroke="#111012" stroke-width="3.5" stroke-linecap="round"/></g>` +
+    `<path d="M 20 120 A 100 100 0 0 1 220 120" pathLength="100" fill="none" stroke="#3A3437" stroke-width="14"/>` +
+    `<path d="M 20 120 A 100 100 0 0 1 220 120" pathLength="100" fill="none" stroke="#F0601A" stroke-width="14" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
+    `<g class="ponteiro" style="--ang:${ang}deg"><line x1="120" y1="120" x2="120" y2="42" stroke="#ECE5D8" stroke-width="4"/></g>` +
     `<g class="dx-ticks">${ticks}</g>` +
-    `<circle cx="120" cy="120" r="8" fill="#111012"/><circle cx="120" cy="120" r="3" fill="#F0601A"/>`,
+    `<circle cx="120" cy="120" r="8" fill="#ECE5D8"/><circle cx="120" cy="120" r="3" fill="#F0601A"/>`,
     '', '0 0 240 190');
   const contagem = h('b', { class: 'dx-score-n' }, '0');
   const sectionMedidor = h('section', { class: 'res-card res-gauge res-entra', style: '--d:1000ms', 'aria-label': `${t.resultado.medidorTitulo}: ${nota} de 10` },
@@ -402,18 +422,19 @@ function telaResultado(resultado) {
       h('p', { class: 'res-score' }, contagem, h('span', {}, 'de 10'))));
 
   // Radar das seis áreas: o desenho se traça sozinho e cada área é tocável
-  const grade = [1, 0.66, 0.33].map((n) => `<polygon points="${pontosSvg(areas.map(() => RAIO * n))}" fill="none" stroke="#111012" stroke-opacity="0.16" stroke-width="1"/>`).join('');
-  const eixos = areas.map((a, i) => { const [x, y] = ponto(i, RAIO); return `<line x1="${CENTRO}" y1="${CENTRO}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#111012" stroke-opacity="0.16" stroke-width="1"/>`; }).join('');
+  const grade = [1, 0.66, 0.33].map((n) => `<polygon points="${pontosSvg(areas.map(() => RAIO * n))}" fill="none" stroke="#3A3437" stroke-width="1"/>`).join('');
+  const eixos = areas.map((a, i) => { const [x, y] = ponto(i, RAIO); return `<line x1="${CENTRO}" y1="${CENTRO}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#3A3437" stroke-width="1"/>`; }).join('');
   const nos = areas.map((a, i) => {
     const [x, y] = ponto(i, raios[i]);
     const fracoAqui = a.id === fraco;
-    return (fracoAqui ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="none" stroke="#9A1F33" stroke-width="2.5" class="radar-pulso"/>` : '') +
-      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${fracoAqui ? 6 : 5}" fill="${fracoAqui ? '#9A1F33' : '#F0601A'}" stroke="#111012" stroke-width="1.5" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>`;
+    const lado = fracoAqui ? 12 : 9;
+    return (fracoAqui ? `<rect x="${(x - 11).toFixed(1)}" y="${(y - 11).toFixed(1)}" width="22" height="22" fill="none" stroke="#ECE5D8" stroke-width="2" class="radar-pulso"/>` : '') +
+      `<rect x="${(x - lado / 2).toFixed(1)}" y="${(y - lado / 2).toFixed(1)}" width="${lado}" height="${lado}" fill="${fracoAqui ? '#9A1F33' : '#F0601A'}" stroke="${fracoAqui ? '#ECE5D8' : '#111012'}" stroke-width="1.5" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>`;
   }).join('');
   const radar = svg(
     grade + eixos +
     `<polygon points="${pontosSvg(raios)}" fill="#F0601A" class="radar-fill"/>` +
-    `<polygon points="${pontosSvg(raios)}" pathLength="100" fill="none" stroke="#F0601A" stroke-width="3.5" stroke-linejoin="round" class="radar-traco" style="filter:drop-shadow(0 0 5px rgba(240,96,26,.8))"/>` +
+    `<polygon points="${pontosSvg(raios)}" pathLength="100" fill="none" stroke="#F0601A" stroke-width="3" stroke-linejoin="miter" class="radar-traco"/>` +
     nos,
     '', '0 0 300 300');
 
@@ -455,17 +476,14 @@ function telaResultado(resultado) {
   const link = `https://wa.me/${apenasDigitos(WHATSAPP_NUMBER)}?text=${encodeURIComponent(mensagem)}`;
 
   return h('div', { class: 'dx-result' },
-    h('div', { class: 'res-nevoa', 'aria-hidden': 'true' }),
-    h('div', { class: 'res-flash', 'aria-hidden': 'true' }),
-    h('div', { class: 'res-luz', 'aria-hidden': 'true' }),
-    h('p', { class: 'res-label res-entra', style: '--d:400ms' }, `${nome}, ${t.resultado.rotulo}`),
+    h('p', { class: 'res-label res-entra', style: '--d:900ms' }, `${nome}, ${t.resultado.rotulo}`),
     h('h1', { class: 'dx-display res-h1 res-titulo', tabindex: '-1' }, `${palavras.slice(0, -1).join(' ')} `, accent(palavras[palavras.length - 1])),
-    perfil.texto && h('p', { class: 'res-text res-entra', style: '--d:1000ms' }, perfil.texto),
+    perfil.texto && h('p', { class: 'res-text res-entra', style: '--d:1300ms' }, perfil.texto),
     sectionMedidor,
     sectionRadar,
-    h('div', { class: 'res-cta-wrap' },
-      h('a', { class: 'button brilho res-cta', href: link, target: '_blank', rel: 'noopener noreferrer' }, t.resultado.whatsappBotao)),
-    h('p', { class: 'res-legend res-entra', style: '--d:6000ms' }, t.resultado.legendaBotao));
+    h('div', { class: 'res-cta-wrap res-entra', style: '--d:5600ms' },
+      h('p', { class: 'res-legend' }, t.resultado.legendaBotao),
+      h('a', { class: 'button res-cta', href: link, target: '_blank', rel: 'noopener noreferrer' }, t.resultado.whatsappBotao)));
 }
 
 /** Número que sobe de 0 até a nota, começando depois de 1,3 s. */
@@ -492,13 +510,12 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
 (function som() {
   const caixa = document.getElementById('dx-sound');
   let audio = null;
-  const icone = (ligado) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/>${ligado ? '<path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
-  const botao = h('button', { type: 'button', class: 'dx-sound', 'aria-pressed': 'false', 'aria-label': 'Ligar o som' });
+  const icone = (ligado) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/>${ligado ? '<path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
+  const botao = h('button', { type: 'button', class: 'dx-sound', 'aria-pressed': 'false', 'aria-label': t.som, title: t.som });
   const pintar = (ligado) => {
     botao.setAttribute('aria-pressed', String(ligado));
-    botao.setAttribute('aria-label', ligado ? 'Desligar o som' : 'Ligar o som');
     botao.innerHTML = `${icone(ligado)}<span></span>`;
-    botao.querySelector('span').textContent = t.som;
+    botao.querySelector('span').textContent = ligado ? t.somLigado : t.somCurto;
   };
   pintar(false);
   botao.addEventListener('click', async () => {

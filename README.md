@@ -28,7 +28,7 @@ Preencha `EMAIL` com seu endereço de e-mail, `PHONE` com o número internaciona
 
 ## Diagnóstico
 
-A página `diagnostico.html` reproduz o diagnóstico da HAZE com a identidade visual da VR: mesmas perguntas, mesma lógica, mesmas telas e animações.
+A página `diagnostico.html` leva a lógica do diagnóstico da HAZE (perguntas, pontuação, áreas e perfis), mas com tela, movimento e identidade próprios da VR: fundo tinta, cartões de linha fina, títulos em caixa-alta condensada, progresso em lâminas inclinadas de 10°, botões em paralelogramo, bloco vinho atrás da foto, o carimbo que bate e gira, listras laranja, e o resultado como a seção clara do site (uma lâmina de papel varre a tela), com cartões escuros e faixa vinho no fim. Não há névoa, brilho nem degradê.
 
 - **Fluxo:** boas-vindas, 16 perguntas (nome, negócio, o que quer conseguir, 11 de dor, faturamento e WhatsApp), tela de cálculo e resultado.
 - **Pontuação:** cada resposta de dor vale 0, 1 ou 2 pontos (0 a 22 no total); a nota de 1 a 10 mede o quanto a marca é desejada, e as seis áreas (Desejo, Vendas, Preço, Dinheiro, Liberdade, Futuro) mostram o ponto mais fraco no radar.

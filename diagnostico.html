@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#ECE5D8">
+  <meta name="theme-color" content="#111012">
   <title>Vinicius Ribeiro | Diagnóstico</title>
   <meta name="description" content="Descubra o quanto a sua marca é desejada, perguntas rápidas e o resultado na hora.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -16,17 +16,18 @@
 </head>
 <body class="dx-body">
   <main class="dx" id="dx">
-    <!-- Barra de progresso, com brilho laranja -->
-    <div class="dx-progress" aria-hidden="true"><div class="dx-progress-bar" id="dx-bar"></div></div>
-
     <header class="dx-header">
-      <a class="brand" href="index.html" aria-label="Vinicius Ribeiro, voltar ao site"><span class="brand-monogram" aria-hidden="true">VR</span><span class="brand-name">VINICIUS RIBEIRO</span></a>
-      <div id="dx-sound"></div>
+      <div class="container dx-header-inner">
+        <a class="brand" href="index.html" aria-label="Vinicius Ribeiro, voltar ao site"><span class="brand-monogram" aria-hidden="true">VR</span><span class="brand-name">VINICIUS RIBEIRO</span></a>
+        <div id="dx-sound"></div>
+      </div>
+      <!-- Progresso: uma lâmina inclinada (10°) por pergunta -->
+      <div class="container"><div class="dx-steps" id="dx-bar" aria-hidden="true"></div></div>
     </header>
 
-    <div class="dx-main"><div class="dx-stage" id="dx-stage"></div></div>
+    <div class="container dx-main"><div class="dx-stage" id="dx-stage"></div></div>
 
-    <nav class="dx-nav" id="dx-nav" hidden><button type="button" id="dx-back">Voltar</button></nav>
+    <nav class="container dx-nav" id="dx-nav" hidden><button type="button" id="dx-back"><span aria-hidden="true">←</span> Voltar</button></nav>
 
     <noscript><p class="dx-noscript">Para fazer o diagnóstico, ative o JavaScript do navegador. Se preferir, volte ao <a href="index.html">site</a>.</p></noscript>
   </main>
