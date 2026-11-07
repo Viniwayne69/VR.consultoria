@@ -75,15 +75,13 @@ const padroes = [
 
 const t = {
   boasVindas: {
-    rotulo: 'Diagnóstico',
     antes: 'O QUANTO A SUA MARCA É',
     destaque: 'DESEJADA',
     depois: 'HOJE?',
-    paragrafo: 'Descubra o que pode estar impedindo sua marca de vender mais, com resultado na hora',
-    recebe: ['Sua nota de desejo, de 1 a 10', 'Onde crescer mais', 'O primeiro passo'],
-    fotoAlt: 'Imagem ilustrativa: a fachada de uma loja de shopping cheia de clientes e iluminada.',
     botao: 'Iniciar diagnóstico',
+    nota: 'Menos de 2 minutos',
   },
+
   som: 'Ouça o áudio sobre o diagnóstico',
   somCurto: 'Som',
   somLigado: 'Som ligado',
@@ -294,18 +292,14 @@ function desenhar() {
 // ---------- Boas-vindas ----------
 function telaBoasVindas() {
   return h('div', { class: 'dx-welcome' },
-    h('div', { class: 'dx-welcome-copy' },
-      h('p', { class: 'eyebrow' }, t.boasVindas.rotulo),
-      h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
-      h('p', { class: 'dx-lead' }, t.boasVindas.paragrafo),
-      h('button', { type: 'button', class: 'button', onclick: () => ir(0) }, t.boasVindas.botao)),
-    h('div', { class: 'dx-visual' },
-      h('div', { class: 'dx-photo' },
-        h('div', { class: 'dx-photo-frame' },
-          h('img', { src: 'assets/loja-depois.webp', alt: t.boasVindas.fotoAlt, width: 1536, height: 1024 }))),
-      h('img', { class: 'stamp dx-stamp', src: 'assets/carimbo-vr.svg', alt: '', 'aria-hidden': 'true', width: 148, height: 148 })),
-    h('ol', { class: 'dx-gets' }, t.boasVindas.recebe.map((item, i) =>
-      h('li', {}, h('b', { class: 'number' }, doisDigitos(i + 1)), h('span', {}, item)))));
+    h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
+    // Tudo gira em torno do botão: placa vinho inclinada atrás dele e anéis que pulsam para fora
+    h('div', { class: 'dx-go' },
+      h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
+      h('span', { class: 'dx-go-ring', 'aria-hidden': 'true' }),
+      h('span', { class: 'dx-go-ring dx-go-ring2', 'aria-hidden': 'true' }),
+      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => ir(0) }, t.boasVindas.botao)),
+    h('p', { class: 'dx-go-note' }, t.boasVindas.nota));
 }
 
 // ---------- Pergunta ----------

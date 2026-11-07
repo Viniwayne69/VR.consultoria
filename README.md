@@ -30,6 +30,7 @@ Preencha `EMAIL` com seu endereço de e-mail, `PHONE` com o número internaciona
 
 A página `diagnostico.html` leva a lógica do diagnóstico da HAZE (perguntas, pontuação, áreas e perfis), mas com tela, movimento e identidade próprios da VR: fundo tinta, cartões de linha fina, títulos em caixa-alta condensada, progresso em lâminas inclinadas de 10°, botões em paralelogramo, bloco vinho atrás da foto, o carimbo que bate e gira, listras laranja, e o resultado como a seção clara do site (uma lâmina de papel varre a tela), com cartões escuros e faixa vinho no fim. Não há névoa, brilho nem degradê.
 
+- **Boas-vindas:** só o título, o botão "Iniciar diagnóstico" e a linha "Menos de 2 minutos", porque o áudio explica o resto. O botão fica no centro de tudo, sobre uma placa vinho inclinada (10°), com anéis laranja que pulsam para fora (textos em `t.boasVindas`, no topo de `diagnostico.js`).
 - **Fluxo:** boas-vindas, 16 perguntas (nome, negócio, o que quer conseguir, 11 de dor, faturamento e WhatsApp), tela de cálculo e resultado.
 - **Pontuação:** cada resposta de dor vale 0, 1 ou 2 pontos (0 a 22 no total); a nota de 1 a 10 mede o quanto a marca é desejada, e as seis áreas (Desejo, Vendas, Preço, Dinheiro, Liberdade, Futuro) mostram o ponto mais fraco no radar.
 - **Perfis e padrões:** o título do resultado vem de um padrão entre duas áreas ou, sem padrão, do perfil pela pontuação. Tudo fica nos dados do topo de `diagnostico.js`, junto com as perguntas, opções e textos.
