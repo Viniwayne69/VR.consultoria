@@ -8,11 +8,71 @@ const PHOTO_ALT = 'Retrato de Vinicius Ribeiro, consultor de marca e vendas.';
 
 'use strict';
 
+// O diagnóstico abre POR CIMA do site, na mesma página, e o clique no botão já liga o áudio. Assim o som começa dentro do toque
+// da pessoa (o iPhone só deixa assim) e não se perde ao trocar de página. O diagnóstico recebe o áudio e o analisador em window.__vrSom.
+const SOM_ARQUIVO = 'assets/audio/diagnostico.mp3';
+const ehIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let quadroDiagnostico = null;
+
+function ligarSom() {
+  const audio = new Audio(SOM_ARQUIVO);
+  audio.preload = 'auto';
+  const som = { audio, analisador: null };
+  audio.play().catch(() => { /* sem permissão: o diagnóstico tenta de novo no primeiro toque */ });
+  // Para o orbe seguir a voz, o áudio passa por um analisador (Web Audio). Só entra no caminho se o contexto estiver rodando
+  // (senão o áudio ficaria mudo) e nunca no iPhone, onde o som do Web Audio some com a chave de silencioso.
+  if (!ehIOS) {
+    try {
+      const Contexto = window.AudioContext || window.webkitAudioContext;
+      const contexto = new Contexto();
+      contexto.resume().catch(() => {}).then(() => {
+        if (contexto.state !== 'running') { contexto.close(); return; }
+        const fonte = contexto.createMediaElementSource(audio);
+        const analisador = contexto.createAnalyser();
+        analisador.fftSize = 512;
+        analisador.smoothingTimeConstant = 0.3;
+        fonte.connect(analisador);
+        analisador.connect(contexto.destination);
+        som.analisador = analisador;
+      }).catch(() => {});
+    } catch { /* sem Web Audio: o orbe usa o movimento simulado */ }
+  }
+  return som;
+}
+
+function abrirDiagnostico() {
+  if (quadroDiagnostico) return;
+  window.__vrSom = ligarSom();
+  const quadro = document.createElement('iframe');
+  quadro.src = CTA_URL + '?embed=1';
+  quadro.title = 'Diagnóstico';
+  quadro.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:9999;background:#111012';
+  quadro.addEventListener('load', () => { try { quadro.contentWindow.focus(); } catch { /* nada */ } });
+  document.body.appendChild(quadro);
+  document.documentElement.style.overflow = 'hidden';
+  history.pushState({ vrDiagnostico: true }, '', '#diagnostico');
+  quadroDiagnostico = quadro;
+}
+
+function fecharDiagnostico() {
+  if (!quadroDiagnostico) return;
+  quadroDiagnostico.remove();
+  quadroDiagnostico = null;
+  document.documentElement.style.overflow = '';
+  try { window.__vrSom?.audio.pause(); } catch { /* nada */ }
+  window.__vrSom = null;
+}
+
+// O botão Voltar do navegador (ou da marca no diagnóstico) fecha o diagnóstico e volta ao site
+window.addEventListener('popstate', () => { if (quadroDiagnostico && !(history.state && history.state.vrDiagnostico)) fecharDiagnostico(); });
+window.vrFecharDiagnostico = () => { if (history.state && history.state.vrDiagnostico) history.back(); else fecharDiagnostico(); };
+
 document.querySelectorAll('[data-cta]').forEach((link) => {
-  link.setAttribute('href', CTA_URL);
-  // O diagnóstico abre com o som ligado: o clique deixa um recado, e a página do diagnóstico liga o áudio ao carregar.
-  link.addEventListener('click', () => {
-    try { sessionStorage.setItem('vr-som', '1'); } catch { /* sem armazenamento, o som liga no botão Iniciar */ }
+  link.setAttribute('href', CTA_URL); // sem JavaScript, ou com Ctrl/clique do meio, abre a página normal
+  link.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    abrirDiagnostico();
   });
 });
 

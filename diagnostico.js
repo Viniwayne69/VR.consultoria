@@ -767,6 +767,12 @@ function iniciarOrbe(canvas) {
 
 // ============================ Voltar e som ============================
 document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-1, estado.etapa - 1)));
+// Aberto por cima do site, a marca fecha o diagnóstico em vez de abrir o site de novo dentro dele
+document.querySelector('.dx-header .brand')?.addEventListener('click', (e) => {
+  try {
+    if (window.parent !== window && window.parent.vrFecharDiagnostico) { e.preventDefault(); window.parent.vrFecharDiagnostico(); }
+  } catch { /* abre o site normalmente */ }
+});
 
 /**
  * Áudio explicando o diagnóstico (cerca de 25 segundos). Não há botão: ele só toca quando a pessoa vem de um botão de
@@ -780,6 +786,15 @@ const som = (function () {
   let tocouUmaVez = false; // o áudio toca uma vez só: depois disso o botão não liga de novo
   let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
   let dados = null;
+  // Aberto por cima do site (iframe), o áudio e o analisador já vêm ligados pelo clique no botão do site
+  try {
+    const doSite = window.parent !== window ? window.parent.__vrSom : null;
+    if (doSite && doSite.audio) {
+      audio = doSite.audio;
+      tocouUmaVez = true;
+      if (doSite.analisador) { analisador = doSite.analisador; dados = new Uint8Array(analisador.frequencyBinCount); }
+    }
+  } catch { /* página aberta direto, sem o site por baixo */ }
   // O áudio passa por um analisador (Web Audio) antes de sair. Só entra no caminho se o navegador deixar o contexto rodar:
   // um áudio ligado a um contexto parado ficaria mudo. Sem análise, o orbe usa um movimento simulado.
   async function prepararAnalise() {
