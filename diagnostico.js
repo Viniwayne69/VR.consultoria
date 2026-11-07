@@ -295,17 +295,65 @@ function orbeDaVoz() {
   return caixa;
 }
 
+/**
+ * Dá profundidade ao botão: o conjunto se inclina em 3D para o lado do mouse (--px e --py, de -1 a 1) e, sem mouse
+ * (celular ou parado), balança sozinho bem de leve. Termina quando a tela sai da página; parado com prefers-reduced-motion.
+ */
+function inclinarBotao(caixa) {
+  if (semMovimento()) return;
+  let alvoX = 0;
+  let alvoY = 0;
+  let x = 0;
+  let y = 0;
+  let mouse = false;
+  const limite = (v) => Math.max(-1, Math.min(1, v));
+  const mover = (e) => {
+    if (e.pointerType === 'touch') return;
+    mouse = true;
+    const r = caixa.getBoundingClientRect();
+    alvoX = limite((e.clientX - (r.left + r.width / 2)) / (window.innerWidth / 2));
+    alvoY = limite((e.clientY - (r.top + r.height / 2)) / (window.innerHeight / 2));
+  };
+  const saiu = () => { mouse = false; };
+  window.addEventListener('pointermove', mover);
+  document.documentElement.addEventListener('pointerleave', saiu);
+  const passo = (agora) => {
+    if (!caixa.isConnected) {
+      window.removeEventListener('pointermove', mover);
+      document.documentElement.removeEventListener('pointerleave', saiu);
+      return;
+    }
+    requestAnimationFrame(passo);
+    if (!mouse) { alvoX = Math.sin(agora * 0.0006) * 0.7; alvoY = Math.cos(agora * 0.00045) * 0.5; }
+    x += (alvoX - x) * 0.06;
+    y += (alvoY - y) * 0.06;
+    caixa.style.setProperty('--px', x.toFixed(3));
+    caixa.style.setProperty('--py', y.toFixed(3));
+  };
+  requestAnimationFrame(passo);
+}
+
 function telaBoasVindas() {
   return h('div', { class: 'dx-welcome' },
     h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
     orbeDaVoz(),
-    // Tudo gira em torno do botão: placa vinho inclinada atrás dele e anéis que pulsam para fora
-    h('div', { class: 'dx-go' },
-      h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
-      h('span', { class: 'dx-go-ring', 'aria-hidden': 'true' }),
-      h('span', { class: 'dx-go-ring dx-go-ring2', 'aria-hidden': 'true' }),
-      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => ir(0) }, t.boasVindas.botao)),
+    // Tudo gira em torno do botão: placa vinho inclinada, borda de luz que corre, anéis que pulsam e o botão em relevo (3D)
+    botaoGrande(),
     h('p', { class: 'dx-go-note' }, t.boasVindas.nota));
+}
+
+/** O botão do início: placa, luz que corre pela borda, anéis, e a tecla em relevo que afunda ao apertar. */
+function botaoGrande() {
+  const caixa = h('div', { class: 'dx-go' },
+    h('span', { class: 'dx-go-edge', 'aria-hidden': 'true' }),
+    h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
+    h('span', { class: 'dx-go-ring', 'aria-hidden': 'true' }),
+    h('span', { class: 'dx-go-ring dx-go-ring2', 'aria-hidden': 'true' }),
+    h('div', { class: 'dx-go-key' },
+      h('span', { class: 'dx-go-depth', 'aria-hidden': 'true' }),
+      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => ir(0) }, t.boasVindas.botao)));
+  inclinarBotao(caixa);
+  return caixa;
 }
 
 // ---------- Pergunta ----------
@@ -523,6 +571,8 @@ const ORBE_FRAG = `
   uniform float rot;
   uniform float hoverIntensity;
   uniform float uLevel;
+  uniform float uAgudos;
+  uniform float uProg;
   varying vec2 vUv;
 
   vec3 hash33(vec3 p3) {
@@ -572,18 +622,19 @@ const ORBE_FRAG = `
     float len = length(uv);
     float invLen = len > 0.0 ? 1.0 / len : 0.0;
 
-    float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
+    float n0 = snoise3(vec3(uv * noiseScale * (1.0 + uAgudos * 0.6), iTime * 0.5)) * 0.5 + 0.5;
     float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
     float d0 = distance(uv, (r0 * invLen) * uv);
     float v0 = light1(1.0, 10.0, d0);
     v0 *= smoothstep(r0 * 1.05, r0, len);
-    float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
+    float cl = cos(ang + iTime * 2.0 + uProg * 6.283) * 0.5 + 0.5;
 
-    float a = iTime * -1.0;
+    float a = iTime * -1.0 - uProg * 12.566;
     vec2 pos = vec2(cos(a), sin(a)) * r0;
     float d = distance(uv, pos);
     float v1 = light2(1.5, 5.0, d);
     v1 *= light1(1.0, 50.0, d0);
+    v1 *= 1.0 + uAgudos * 1.5;
 
     float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
     float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
@@ -607,7 +658,7 @@ const ORBE_FRAG = `
     uv *= 1.3;
 
     // A voz infla o orbe
-    uv /= 1.0 + uLevel * 0.1;
+    uv /= 1.0 + uLevel * 0.16;
 
     float s = sin(rot);
     float c = cos(rot);
@@ -657,15 +708,18 @@ function iniciarOrbe(canvas) {
   const uRot = u('rot');
   const uIntensidade = u('hoverIntensity');
   const uNivel = u('uLevel');
+  const uAgudos = u('uAgudos');
+  const uProg = u('uProg');
   gl.clearColor(0, 0, 0, 0);
 
   let rot = 0;
-  let relogio = 0; // tempo do shader: anda devagar e só um pouco mais rápido com a voz
-  let suave = 0;
+  let relogio = 0; // tempo do shader: só anda para frente, então o desenho nunca volta ao mesmo ponto
+  let progresso = 0;
+  const voz = { nivel: 0, graves: 0, medios: 0, agudos: 0 }; // a voz já suavizada
   let ultimo = 0;
   let quadro = 0;
 
-  const pintarQuadro = (tempo, nivel) => {
+  const pintarQuadro = (tempo, v, prog) => {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const largura = Math.round(canvas.clientWidth * dpr);
     const altura = Math.round(canvas.clientHeight * dpr);
@@ -677,17 +731,19 @@ function iniciarOrbe(canvas) {
     }
     gl.uniform1f(uTempo, tempo);
     gl.uniform3f(uTamanho, largura, altura, largura / altura);
-    gl.uniform1f(uHover, Math.min(nivel * 1.2, 1));
-    gl.uniform1f(uIntensidade, Math.min(nivel * 0.4, 0.5));
+    gl.uniform1f(uHover, Math.min(v.medios * 1.5, 1));
+    gl.uniform1f(uIntensidade, 0.25 + v.medios * 0.55);
     gl.uniform1f(uRot, rot);
-    gl.uniform1f(uNivel, nivel);
+    gl.uniform1f(uNivel, v.graves);
+    gl.uniform1f(uAgudos, v.agudos);
+    gl.uniform1f(uProg, prog);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
 
   // Sem movimento (prefers-reduced-motion): um quadro parado
   if (semMovimento()) {
-    requestAnimationFrame(() => pintarQuadro(2.5, 0.1));
+    requestAnimationFrame(() => pintarQuadro(2.5, { nivel: 0.1, graves: 0.1, medios: 0.05, agudos: 0.05 }, 0.2));
     return true;
   }
 
@@ -696,15 +752,16 @@ function iniciarOrbe(canvas) {
     quadro = requestAnimationFrame(passo);
     const dt = Math.min((agora - ultimo) * 0.001, 0.05);
     ultimo = agora;
-    // Sobe rápido com a voz e desce devagar, para acompanhar cada palavra sem tremer
-    const voz = som.nivel();
-    suave += (voz - suave) * (voz > suave ? 0.1 : 0.035);
-    // Parado, o orbe "respira" devagar
+    const l = som.leitura();
+    // Sobe rápido com a voz e desce mais devagar, para acompanhar cada palavra sem tremer
+    for (const k of ['nivel', 'graves', 'medios', 'agudos']) voz[k] += (l[k] - voz[k]) * (l[k] > voz[k] ? 0.3 : 0.07);
+    progresso += (l.progresso - progresso) * 0.2;
+    // Parado, o orbe "respira" devagar; quando o áudio acaba ele volta a esse estado
     const respira = 0.05 + 0.035 * Math.sin(agora * 0.0007);
-    const nivel = Math.min(suave + respira, 1);
-    rot += dt * (0.04 + nivel * 0.3);
-    relogio += dt * (0.3 + nivel * 0.35);
-    pintarQuadro(relogio, nivel);
+    const energia = Math.min(voz.nivel + respira, 1);
+    rot += dt * (0.06 + energia * 0.7);
+    relogio += dt * (0.3 + energia * 0.9 + voz.agudos * 0.5);
+    pintarQuadro(relogio, { nivel: energia, graves: Math.min(voz.graves + respira, 1), medios: voz.medios, agudos: voz.agudos }, progresso);
   };
   quadro = requestAnimationFrame(passo);
   return true;
@@ -747,25 +804,43 @@ const som = (function () {
     }
     try { await audio.play(); } catch { /* o navegador não deixou tocar sem um toque da pessoa */ }
   }
+  const progressoDe = () => {
+    const total = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 24;
+    return Math.min(audio.currentTime / total, 1);
+  };
   window.addEventListener('pagehide', () => audio?.pause());
   // Veio do botão de diagnóstico do site: liga já ao carregar (o Chrome libera, pois o clique foi no mesmo site)
   try { if (SOM_ATIVO && sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar(); } } catch { /* sem armazenamento */ }
 
   return {
-    /** Volume da voz agora, de 0 a 1 (0 com o áudio parado). */
-    nivel() {
-      if (!audio || audio.paused || audio.ended) return 0;
+    /**
+     * O que a voz está fazendo agora: volume geral, graves, médios e agudos (de 0 a 1) e o andamento do áudio (0 a 1).
+     * Com o áudio parado tudo é 0; depois que ele acaba o andamento fica em 1.
+     */
+    leitura() {
+      const quieto = { nivel: 0, graves: 0, medios: 0, agudos: 0, progresso: 0 };
+      if (!audio) return quieto;
+      if (audio.ended) return { ...quieto, progresso: 1 };
+      if (audio.paused) return { ...quieto, progresso: progressoDe() };
+      const progresso = progressoDe();
       if (analisador) {
         analisador.getByteFrequencyData(dados);
-        // Só a faixa da voz (até uns 4 kHz), em RMS, como no orbe original
-        const ate = Math.min(dados.length, 48);
-        let soma = 0;
-        for (let i = 0; i < ate; i++) { const v = dados[i] / 255; soma += v * v; }
-        return Math.min(Math.sqrt(soma / ate) * 1.5 * 3, 1);
+        // Cada bin tem uns 86 Hz: graves até uns 350 Hz, médios até 1,2 kHz e agudos até 4 kHz (a faixa da voz)
+        const faixa = (de, ate) => {
+          let soma = 0;
+          for (let i = de; i < ate; i++) { const v = dados[i] / 255; soma += v * v; }
+          return Math.min(Math.sqrt(soma / (ate - de)) * 3.2, 1);
+        };
+        const graves = faixa(1, 5);
+        const medios = faixa(5, 14);
+        const agudos = faixa(14, 48);
+        return { nivel: Math.min(faixa(0, 48) * 1.4, 1), graves, medios, agudos, progresso };
       }
-      // Sem análise: ondas somadas que lembram a fala
-      const tempo = performance.now() * 0.001;
-      return Math.max(0, 0.35 + 0.25 * Math.sin(tempo * 5.1) * Math.sin(tempo * 1.7) + 0.15 * Math.sin(tempo * 11.3));
+      // Sem análise: ondas que se misturam sem repetir e acompanham o andamento do áudio
+      const t = audio.currentTime;
+      const fala = 0.5 + 0.5 * Math.sin(t * 3.1 + Math.sin(t * 0.7) * 2.4);
+      const faixa = (a, b, c) => Math.max(0, Math.min(1, fala * (0.55 + 0.45 * Math.sin(t * a + Math.sin(t * b) * c))));
+      return { nivel: fala * 0.8, graves: faixa(2.3, 0.41, 1.7), medios: faixa(4.1, 0.63, 2.1), agudos: faixa(7.9, 0.37, 2.9), progresso };
     },
   };
 })();
