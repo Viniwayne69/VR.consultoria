@@ -4,6 +4,7 @@
    Usa as variáveis e fontes do styles.css. */
 
 .dx-body {overflow-x:hidden}
+html.dx-embutido {overscroll-behavior:none}
 .dx {--focus-color:var(--fogo);position:relative;isolation:isolate;display:flex;flex-direction:column;min-height:100dvh;background:var(--tinta);color:var(--papel)}
 .dx [hidden] {display:none}
 .dx {overflow-x:clip}
@@ -158,7 +159,7 @@
 .res-text {max-width:460px;font-size:16px;line-height:1.55;color:var(--grafite)}
 
 .res-card {position:relative;isolation:isolate;margin:12px 12px 0 0;padding:22px 20px;color:var(--papel)}
-.res-card::after {content:"";position:absolute;inset:0;z-index:-1;background:var(--tinta)}
+.res-card::after {content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(165deg,#1E191C,var(--tinta) 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.6),0 18px 28px -14px rgba(0,0,0,.55)}
 .res-card::before {content:'';position:absolute;inset:0;z-index:-1;background:var(--vinho-vivo);transform:translate(12px,-12px);clip-path:polygon(40px 0,100% 0,calc(100% - 40px) 100%,0 100%)}
 .res-card-title {border-left:1px solid var(--fogo);padding-left:12px;font:700 11px/1.3 var(--body-font);letter-spacing:.1em;text-transform:uppercase;color:var(--fogo)}
 
@@ -168,7 +169,7 @@
 .res-ext.l {left:4px}
 .res-ext.r {right:4px}
 .res-score {position:absolute;inset-inline:0;top:66%;text-align:center;line-height:1}
-.res-score b {font:800 64px/1 var(--title-font);font-stretch:88%;font-variant-numeric:tabular-nums;color:var(--papel)}
+.res-score b {font:800 64px/1 var(--title-font);font-stretch:88%;font-variant-numeric:tabular-nums;color:var(--papel);text-shadow:0 1px 0 #C9C0AF,0 2px 0 #A59C8B,0 3px 0 #837B6C,0 4px 0 #615A4F,0 9px 10px rgba(0,0,0,.65),0 0 26px rgba(240,96,26,.3)}
 .res-score span {margin-left:6px;font:800 16px/1 var(--title-font);font-stretch:88%;color:var(--fogo)}
 .dx-ticks {display:none}
 .arco-enche {stroke-dasharray:100;stroke-dashoffset:var(--off);animation:arcoEnche 1.6s cubic-bezier(.2,.7,.2,1) 1.3s both}
@@ -181,17 +182,20 @@
 .res-radar-box svg {position:absolute;inset:0;width:100%;height:100%}
 .radar-traco {stroke-dasharray:100;stroke-dashoffset:0;animation:radarTraco 1.5s cubic-bezier(.4,0,.2,1) 2.9s both}
 @keyframes radarTraco {from {stroke-dashoffset:100}}
-.radar-fill {opacity:.25;animation:radarAparece .9s ease-out 4.2s both}
+.radar-fill {animation:radarAparece .9s ease-out 4.2s both}
 @keyframes radarAparece {from {opacity:0}}
+.radar-prisma {animation:radarSobe .9s cubic-bezier(.2,.7,.2,1) 4.2s both}
+@keyframes radarSobe {from {opacity:0;transform:translateY(10px)}}
 .radar-no {transform-box:fill-box;transform-origin:center;animation:radarNo .4s cubic-bezier(.2,.7,.2,1) both}
 @keyframes radarNo {from {transform:scale(0);opacity:0}}
 .radar-pulso {transform-box:fill-box;transform-origin:center;animation:radarPulso 1.5s ease-out 4.4s infinite}
 @keyframes radarPulso {0% {transform:scale(.6);opacity:.9} 100% {transform:scale(2);opacity:0}}
 
 .res-area {position:absolute;transform:translate(-50%,-50%);white-space:nowrap;padding:7px 10px;border:1px solid var(--grafite);background:var(--carvao);color:var(--papel);font:700 10px/1 var(--body-font);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background-color .18s ease,border-color .18s ease,color .18s ease;animation:resLabelEntra .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0ms)}
+.res-area {background:linear-gradient(#332D31,#1C181B);border-color:#4A4448 #2A2528 #000 #2A2528;box-shadow:0 3px 0 #000,0 6px 10px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12)}
 .res-area:hover {border-color:var(--fogo)}
-.res-area:active {scale:.95}
-.res-area[aria-pressed="true"] {border-color:var(--fogo);background:var(--fogo);color:var(--tinta)}
+.res-area:active {scale:.95;box-shadow:0 1px 0 #000,inset 0 1px 0 rgba(255,255,255,.12)}
+.res-area[aria-pressed="true"] {border-color:var(--fogo-claro);background:linear-gradient(var(--fogo-claro),var(--fogo) 55%,#E5520E);color:var(--tinta);box-shadow:0 3px 0 var(--fogo-escuro),0 6px 14px rgba(240,96,26,.35),inset 0 1px 0 rgba(255,255,255,.4)}
 .res-area.is-weak {border-color:var(--vinho-vivo)}
 .res-area.is-weak:not([aria-pressed="true"]) {animation:resLabelEntra .5s cubic-bezier(.2,.7,.2,1) both,resLabelPulsa 1.8s ease-out 4.4s infinite;animation-delay:var(--d,0ms),4.4s}
 /* O rótulo usa a propriedade scale (e não transform) para não desmanchar o centramento feito com translate */
@@ -208,16 +212,19 @@
 .res-chip.fraco {background:var(--vinho-vivo);color:var(--papel)}
 
 /* Faixa vinho do fim: a chamada para o WhatsApp (no celular fica colada no rodapé da tela) */
-.res-cta-wrap {position:sticky;bottom:0;z-index:10;margin-top:28px;padding:12px 0;background:var(--vinho-vivo);box-shadow:0 0 0 100vmax var(--vinho-vivo);clip-path:inset(0 -100vmax)}
+.res-cta-wrap {position:sticky;bottom:0;z-index:10;isolation:isolate;margin-top:28px;padding:12px 0}
+/* A faixa vinho vai de ponta a ponta da tela com um fundo simples (a sombra de 100vmax que havia antes deixava a rolagem pesada no iPhone) */
+.res-cta-wrap::before {content:'';position:absolute;z-index:-1;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);background:var(--vinho-vivo)}
 .res-cta-wrap .button {width:100%}
 .res-legend {display:none}
 
 /* Celular: a tela de boas-vindas ocupa exatamente a altura da tela, sem rolagem. Os tamanhos seguem a altura (dvh), então título,
-   orbe e botão encolhem juntos em celulares baixos. Por cima do site (iframe) sobra uma folga embaixo para a barra do Safari. */
+   orbe e botão encolhem juntos em celulares baixos. */
 @media (max-width:767px) {
+  /* Perguntas de digitar (nome, negócio, WhatsApp): ficam no alto da tela, porque o teclado abre embaixo e cobriria o campo */
+  .dx-main:has(.dx-field) {align-items:flex-start;padding-top:24px}
   .dx:has(.dx-welcome) {height:100vh;height:100dvh;min-height:0;overflow:hidden}
   .dx:has(.dx-welcome) .dx-main {min-height:0;padding-block:0}
-  html.dx-embutido .dx:has(.dx-welcome) .dx-main {padding-bottom:max(11dvh,env(safe-area-inset-bottom))}
   .dx-welcome h1 {font-size:min(13vw,5.2dvh);line-height:1}
   .dx-orb {width:min(68vw,260px,25dvh);margin-bottom:-4px}
   .dx-go {margin-top:min(20px,2.4dvh);padding:min(24px,3.2dvh) 26px}

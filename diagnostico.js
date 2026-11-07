@@ -102,7 +102,7 @@ const t = {
     rotulo: 'o seu resultado',
     medidorTitulo: 'O quanto a sua marca é desejada',
     medidorExtremos: ['Pouco', 'Muito'],
-    whatsappBotao: 'Falar com o Vinicius no WhatsApp',
+    whatsappBotao: 'Falar com Vinicius no WhatsApp',
     calculando: 'Calculando o seu resultado',
     passos: ['Lendo as suas respostas', 'Cruzando as seis áreas', 'Achando o ponto mais fraco'],
     pontoFraco: 'Resolver agora',
@@ -454,17 +454,46 @@ function telaResultado(resultado) {
   const ang = -90 + nota * 18;
   const palavras = perfil.titulo.split(' ');
 
-  // Medidor em arco (os cartões são escuros, então tudo aqui é papel e laranja sobre tinta): o ponteiro varre até a nota, passa um pouco e volta
   const ticks = [0, 2, 4, 6, 8, 10].map((v) => {
     const a = Math.PI * (1 - v / 10);
     return `<text x="${(120 + 114 * Math.cos(a)).toFixed(1)}" y="${(120 - 114 * Math.sin(a)).toFixed(1)}" font-size="9" font-weight="700" fill="#CDC5B5" text-anchor="middle" dominant-baseline="middle">${v}</text>`;
   }).join('');
+  // Medidor em relevo: mostrador com profundidade, canal fundo, arco em tubo (luz vinda de cima), ponteiro cônico com sombra e um pino metálico
+  const arcoDe = (r) => `M ${120 - r} 120 A ${r} ${r} 0 0 1 ${120 + r} 120`;
+  const defsMedidor =
+    `<defs>` +
+    `<radialGradient id="g-mostrador" cx="120" cy="120" r="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2E282C"/><stop offset=".72" stop-color="#1B171A"/><stop offset="1" stop-color="#111012" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="g-ponteiro" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A39B8E"/><stop offset=".5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B5AC9D"/></linearGradient>` +
+    `<radialGradient id="g-metal" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".4" stop-color="#ECE5D8"/><stop offset="1" stop-color="#6A6358"/></radialGradient>` +
+    `<radialGradient id="g-joia" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFD2AE"/><stop offset=".45" stop-color="#F0601A"/><stop offset="1" stop-color="#7E2704"/></radialGradient>` +
+    `<linearGradient id="g-sobe" x1="0" y1="118" x2="0" y2="182" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient><mask id="g-desce" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="190"><rect x="0" y="0" width="240" height="190" fill="url(#g-sobe)"/><rect x="0" y="0" width="240" height="118" fill="#fff"/></mask>` +
+    `<filter id="g-borra" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>` +
+    `<filter id="g-sombra" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>` +
+    `</defs>`;
   const medidor = svg(
-    `<path d="M 20 120 A 100 100 0 0 1 220 120" pathLength="100" fill="none" stroke="#3A3437" stroke-width="14"/>` +
-    `<path d="M 20 120 A 100 100 0 0 1 220 120" pathLength="100" fill="none" stroke="#F0601A" stroke-width="14" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
-    `<g class="ponteiro" style="--ang:${ang}deg"><line x1="120" y1="120" x2="120" y2="42" stroke="#ECE5D8" stroke-width="4"/></g>` +
+    defsMedidor +
+    `<circle cx="120" cy="120" r="116" fill="url(#g-mostrador)" mask="url(#g-desce)"/>` +
+    // canal fundo: borda de sombra por dentro, borda de luz por fora
+    `<path d="${arcoDe(100)}" fill="none" stroke="#050405" stroke-width="20"/>` +
+    `<path d="${arcoDe(100)}" fill="none" stroke="#3A3437" stroke-width="14"/>` +
+    `<path d="${arcoDe(94.5)}" fill="none" stroke="#1E1A1D" stroke-width="3"/>` +
+    `<path d="${arcoDe(110.5)}" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.5"/>` +
+    // arco aceso: brilho, corpo, sombra na borda de dentro e reflexo na de fora
+    `<path d="${arcoDe(100)}" pathLength="100" fill="none" stroke="#F0601A" stroke-opacity=".55" stroke-width="24" filter="url(#g-borra)" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
+    `<path d="${arcoDe(100)}" pathLength="100" fill="none" stroke="#F0601A" stroke-width="14" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
+    `<path d="${arcoDe(94.5)}" pathLength="100" fill="none" stroke="#8A2E06" stroke-width="3" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
+    `<path d="${arcoDe(104.5)}" pathLength="100" fill="none" stroke="#FFB680" stroke-width="3.5" stroke-opacity=".9" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
+    `<g class="ponteiro" style="--ang:${ang}deg">` +
+      `<polygon points="115,120 125,120 121.2,38 118.8,38" fill="#000" fill-opacity=".55" transform="translate(5 7)" filter="url(#g-sombra)"/>` +
+      `<polygon points="116,120 124,120 120.9,40 119.1,40" fill="url(#g-ponteiro)"/>` +
+      `<polygon points="116,120 124,120 122.5,138 117.5,138" fill="#8F877B"/>` +
+    `</g>` +
     `<g class="dx-ticks">${ticks}</g>` +
-    `<circle cx="120" cy="120" r="8" fill="#ECE5D8"/><circle cx="120" cy="120" r="3" fill="#F0601A"/>`,
+    `<circle cx="124" cy="127" r="13" fill="#000" fill-opacity=".55" filter="url(#g-sombra)"/>` +
+    `<circle cx="120" cy="120" r="12" fill="url(#g-metal)"/>` +
+    `<circle cx="120" cy="120" r="12" fill="none" stroke="#000" stroke-opacity=".3"/>` +
+    `<circle cx="120" cy="120" r="5.5" fill="url(#g-joia)"/>` +
+    `<ellipse cx="116.5" cy="115.5" rx="3.2" ry="2" fill="#fff" fill-opacity=".75"/>`,
     '', '0 0 240 190');
   const contagem = h('b', { class: 'dx-score-n' }, '0');
   const sectionMedidor = h('section', { class: 'res-card res-gauge res-entra', style: '--d:1000ms', 'aria-label': `${t.resultado.medidorTitulo}: ${nota} de 10` },
@@ -475,19 +504,43 @@ function telaResultado(resultado) {
       h('p', { class: 'res-score' }, contagem, h('span', {}, 'de 10'))));
 
   // Radar das seis áreas: o desenho se traça sozinho e cada área é tocável
-  const grade = [1, 0.66, 0.33].map((n) => `<polygon points="${pontosSvg(areas.map(() => RAIO * n))}" fill="none" stroke="#3A3437" stroke-width="1"/>`).join('');
-  const eixos = areas.map((a, i) => { const [x, y] = ponto(i, RAIO); return `<line x1="${CENTRO}" y1="${CENTRO}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#3A3437" stroke-width="1"/>`; }).join('');
+  // Radar em relevo: um piso de pedra com espessura, a sombra do desenho no piso e o desenho como um prisma de luz, com pontos em esfera
+  const mexer = (pts, dy) => `<polygon points="${pts}" transform="translate(0 ${dy})"`;
+  const hexPiso = pontosSvg(areas.map(() => RAIO));
+  const hexDados = pontosSvg(raios);
+  const espessuraPiso = [10, 8, 6, 4, 2].map((dy, i) => `${mexer(hexPiso, dy)} fill="${['#080708', '#0E0C0E', '#151215', '#1C181B', '#231F22'][i]}"/>`).join('');
+  const grade = [0.66, 0.33].map((n) => `<polygon points="${pontosSvg(areas.map(() => RAIO * n))}" fill="none" stroke="#4A4448" stroke-width="1"/>`).join('');
+  const eixos = areas.map((a, i) => { const [x, y] = ponto(i, RAIO); return `<line x1="${CENTRO}" y1="${CENTRO}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#4A4448" stroke-width="1"/>`; }).join('');
+  const lados = [8, 7, 6, 5, 4, 3, 2, 1].map((dy, i) => {
+    const mistura = i / 7; // do fundo escuro (embaixo) ao laranja da parede (perto do topo)
+    const cor = [0x5A, 0x1E, 0x05].map((b, k) => Math.round(b + ([0xC0, 0x4A, 0x0C][k] - b) * mistura).toString(16).padStart(2, '0')).join('');
+    return `${mexer(hexDados, dy)} fill="#${cor}" stroke="#${cor}" stroke-width="1" stroke-linejoin="round"/>`;
+  }).join('');
   const nos = areas.map((a, i) => {
     const [x, y] = ponto(i, raios[i]);
     const fracoAqui = a.id === fraco;
-    const lado = fracoAqui ? 12 : 9;
-    return (fracoAqui ? `<rect x="${(x - 11).toFixed(1)}" y="${(y - 11).toFixed(1)}" width="22" height="22" fill="none" stroke="#ECE5D8" stroke-width="2" class="radar-pulso"/>` : '') +
-      `<rect x="${(x - lado / 2).toFixed(1)}" y="${(y - lado / 2).toFixed(1)}" width="${lado}" height="${lado}" fill="${fracoAqui ? '#9A1F33' : '#F0601A'}" stroke="${fracoAqui ? '#ECE5D8' : '#111012'}" stroke-width="1.5" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>`;
+    const r = fracoAqui ? 8 : 6;
+    return (fracoAqui ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11" fill="none" stroke="#ECE5D8" stroke-width="2" class="radar-pulso"/>` : '') +
+      `<circle cx="${x.toFixed(1)}" cy="${(y + 1.5).toFixed(1)}" r="${r}" fill="#000" fill-opacity=".45" filter="url(#r-sombra)" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>` +
+      `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#${fracoAqui ? 'r-vinho' : 'r-esfera'})" stroke="${fracoAqui ? '#ECE5D8' : '#111012'}" stroke-width="1.2" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>` +
+      `<ellipse cx="${(x - r * 0.32).toFixed(1)}" cy="${(y - r * 0.38).toFixed(1)}" rx="${(r * 0.32).toFixed(1)}" ry="${(r * 0.2).toFixed(1)}" fill="#fff" fill-opacity=".7" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>`;
   }).join('');
   const radar = svg(
+    `<defs>` +
+    `<radialGradient id="r-piso" cx="150" cy="150" r="96" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#352F33"/><stop offset="1" stop-color="#1C181B"/></radialGradient>` +
+    `<linearGradient id="r-topo" x1="0" y1="52" x2="0" y2="248" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFA766"/><stop offset=".55" stop-color="#F0601A"/><stop offset="1" stop-color="#D24A0C"/></linearGradient>` +
+    `<radialGradient id="r-esfera" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFE6D0"/><stop offset=".4" stop-color="#F0601A"/><stop offset="1" stop-color="#8C3006"/></radialGradient>` +
+    `<radialGradient id="r-vinho" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FF8CA0"/><stop offset=".4" stop-color="#B8263D"/><stop offset="1" stop-color="#4A0C18"/></radialGradient>` +
+    `<filter id="r-sombra" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.6"/></filter>` +
+    `<filter id="r-borra" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>` +
+    `</defs>` +
+    espessuraPiso +
+    `<polygon points="${hexPiso}" fill="url(#r-piso)" stroke="#5A5256" stroke-width="1.2" stroke-linejoin="round"/>` +
     grade + eixos +
-    `<polygon points="${pontosSvg(raios)}" fill="#F0601A" class="radar-fill"/>` +
-    `<polygon points="${pontosSvg(raios)}" pathLength="100" fill="none" stroke="#F0601A" stroke-width="3" stroke-linejoin="miter" class="radar-traco"/>` +
+    `<polygon points="${hexDados}" transform="translate(5 12)" fill="#000" fill-opacity=".55" filter="url(#r-borra)" class="radar-fill"/>` +
+    `<g class="radar-prisma">${lados}` +
+    `<polygon points="${hexDados}" fill="url(#r-topo)" stroke="#FFD2AE" stroke-width="1.5" stroke-linejoin="round"/></g>` +
+    `<polygon points="${hexDados}" pathLength="100" fill="none" stroke="#FFE3C8" stroke-width="2.5" stroke-linejoin="round" class="radar-traco"/>` +
     nos,
     '', '0 0 300 300');
 

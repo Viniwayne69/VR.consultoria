@@ -455,7 +455,11 @@ body {overflow-x:clip}
 }
 
 /* Diagnóstico aberto por cima do site: cobre a tela toda (inclusive sob as barras do Safari) e trava e esconde o site por baixo */
-.dx-overlay {position:fixed;top:0;left:0;width:100%;height:100vh;height:100lvh;border:0;z-index:9999;background:#111012}
+.dx-overlay {position:fixed;top:0;left:0;width:100%;height:100vh;height:100dvh;border:0;z-index:9999;background:#111012}
+/* iPhone: o quadro mede a tela cheia menos a barra do Safari, que fica por cima da parte de baixo (o fundo escuro aparece atrás dela) */
+@supports (-webkit-touch-callout:none) {
+  .dx-overlay {height:calc(100lvh - 96px)}
+}
 html.dx-aberto {background:#111012}
 html.dx-aberto body {position:fixed;left:0;right:0;width:100%}
 html.dx-aberto body > :not(.dx-overlay) {visibility:hidden}
