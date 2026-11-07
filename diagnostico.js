@@ -507,7 +507,7 @@ function contarNota(alvo) {
 
 // ============================ Orbe da voz ============================
 // Esfera de luz desenhada em WebGL (sem bibliotecas), nas cores da VR: núcleo laranja e pêssego, borda vinho.
-// O volume do áudio que está tocando (voz) dá o movimento: com a voz alta o orbe gira, ondula e infla; nas pausas ele acalma.
+// O volume do áudio que está tocando (voz) dá o movimento: com a voz alta o orbe gira, ondula e infla, tudo em câmera lenta; nas pausas ele acalma.
 const ORBE_VERT = `
   precision highp float;
   attribute vec2 position;
@@ -610,7 +610,7 @@ const ORBE_FRAG = `
     uv *= 1.3;
 
     // A voz infla o orbe
-    uv /= 1.0 + uLevel * 0.2;
+    uv /= 1.0 + uLevel * 0.1;
 
     float s = sin(rot);
     float c = cos(rot);
@@ -663,6 +663,7 @@ function iniciarOrbe(canvas) {
   gl.clearColor(0, 0, 0, 0);
 
   let rot = 0;
+  let relogio = 0; // tempo do shader: anda devagar e só um pouco mais rápido com a voz
   let suave = 0;
   let ultimo = 0;
   let quadro = 0;
@@ -679,8 +680,8 @@ function iniciarOrbe(canvas) {
     }
     gl.uniform1f(uTempo, tempo);
     gl.uniform3f(uTamanho, largura, altura, largura / altura);
-    gl.uniform1f(uHover, Math.min(nivel * 2, 1));
-    gl.uniform1f(uIntensidade, Math.min(nivel * 0.64, 0.8));
+    gl.uniform1f(uHover, Math.min(nivel * 1.2, 1));
+    gl.uniform1f(uIntensidade, Math.min(nivel * 0.4, 0.5));
     gl.uniform1f(uRot, rot);
     gl.uniform1f(uNivel, nivel);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -700,12 +701,13 @@ function iniciarOrbe(canvas) {
     ultimo = agora;
     // Sobe rápido com a voz e desce devagar, para acompanhar cada palavra sem tremer
     const voz = som.nivel();
-    suave += (voz - suave) * (voz > suave ? 0.5 : 0.12);
+    suave += (voz - suave) * (voz > suave ? 0.1 : 0.035);
     // Parado, o orbe "respira" devagar
-    const respira = 0.06 + 0.04 * Math.sin(agora * 0.0015);
+    const respira = 0.05 + 0.035 * Math.sin(agora * 0.0007);
     const nivel = Math.min(suave + respira, 1);
-    rot += dt * (0.15 + nivel * 2.4);
-    pintarQuadro(agora * 0.001, nivel);
+    rot += dt * (0.04 + nivel * 0.3);
+    relogio += dt * (0.3 + nivel * 0.35);
+    pintarQuadro(relogio, nivel);
   };
   quadro = requestAnimationFrame(passo);
   return true;
