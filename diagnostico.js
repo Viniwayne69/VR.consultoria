@@ -337,18 +337,16 @@ function telaBoasVindas() {
   return h('div', { class: 'dx-welcome' },
     h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
     orbeDaVoz(),
-    // Tudo gira em torno do botão: placa vinho inclinada, borda de luz que corre, anéis que pulsam e o botão em relevo (3D)
+    // Tudo gira em torno do botão: placa vinho inclinada, borda de luz que corre e o botão em relevo (3D)
     botaoGrande(),
     h('p', { class: 'dx-go-note' }, t.boasVindas.nota));
 }
 
-/** O botão do início: placa, luz que corre pela borda, anéis, e a tecla em relevo que afunda ao apertar. */
+/** O botão do início: placa, luz que corre pela borda e a tecla em relevo que afunda ao apertar. */
 function botaoGrande() {
   const caixa = h('div', { class: 'dx-go' },
     h('span', { class: 'dx-go-edge', 'aria-hidden': 'true' }),
     h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
-    h('span', { class: 'dx-go-ring', 'aria-hidden': 'true' }),
-    h('span', { class: 'dx-go-ring dx-go-ring2', 'aria-hidden': 'true' }),
     h('div', { class: 'dx-go-key' },
       h('span', { class: 'dx-go-depth', 'aria-hidden': 'true' }),
       h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => ir(0) }, t.boasVindas.botao)));
