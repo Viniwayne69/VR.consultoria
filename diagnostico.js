@@ -1,5 +1,8 @@
 'use strict';
 
+// Aberto por cima do site (iframe de tela cheia): o CSS deixa uma folga embaixo, onde o Safari do iPhone põe a barra
+try { if (window.parent !== window) document.documentElement.classList.add('dx-embutido'); } catch { /* nada */ }
+
 // CONFIGURAÇÃO · WhatsApp que recebe o resultado, com DDI e DDD, só números (exemplo: '5581999999999').
 // Vazio: o WhatsApp abre só com a mensagem pronta e a pessoa escolhe o contato.
 const WHATSAPP_NUMBER = '';

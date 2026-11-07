@@ -212,6 +212,19 @@
 .res-cta-wrap .button {width:100%}
 .res-legend {display:none}
 
+/* Celular: a tela de boas-vindas ocupa exatamente a altura da tela, sem rolagem. Os tamanhos seguem a altura (dvh), então título,
+   orbe e botão encolhem juntos em celulares baixos. Por cima do site (iframe) sobra uma folga embaixo para a barra do Safari. */
+@media (max-width:767px) {
+  .dx:has(.dx-welcome) {height:100vh;height:100dvh;min-height:0;overflow:hidden}
+  .dx:has(.dx-welcome) .dx-main {min-height:0;padding-block:0}
+  html.dx-embutido .dx:has(.dx-welcome) .dx-main {padding-bottom:max(11dvh,env(safe-area-inset-bottom))}
+  .dx-welcome h1 {font-size:min(13vw,5.2dvh);line-height:1}
+  .dx-orb {width:min(68vw,260px,25dvh);margin-bottom:-4px}
+  .dx-go {margin-top:min(20px,2.4dvh);padding:min(24px,3.2dvh) 26px}
+  .dx .dx-go-btn {min-height:min(76px,9.4dvh);font-size:min(15px,2.3dvh)}
+  .dx-go-note {margin-top:min(24px,3.4dvh);font-size:min(11px,1.7dvh)}
+}
+
 @media (min-width:768px) {
   .dx-welcome h1 {font-size:clamp(56px,8vw,88px)}
   .dx-orb {width:290px;margin:0 0 -2px}
