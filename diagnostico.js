@@ -775,11 +775,14 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
  */
 const som = (function () {
   let audio = null;
+  // No iPhone o Safari só deixa o áudio tocar depois de um toque, e o som que passa pelo Web Audio é mudo com a chave de silencioso
+  const ehIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
   let dados = null;
   // O áudio passa por um analisador (Web Audio) antes de sair. Só entra no caminho se o navegador deixar o contexto rodar:
   // um áudio ligado a um contexto parado ficaria mudo. Sem análise, o orbe usa um movimento simulado.
   async function prepararAnalise() {
+    if (ehIOS) return; // lá o orbe usa o movimento simulado
     try {
       const Contexto = window.AudioContext || window.webkitAudioContext;
       if (!Contexto) return;
@@ -798,9 +801,18 @@ const som = (function () {
   async function tocar() {
     if (!audio) {
       audio = new Audio(SOM_ARQUIVO);
-      await prepararAnalise();
+      audio.preload = 'auto';
+      if (!ehIOS) await prepararAnalise(); // no iPhone o play() tem de sair direto do toque, sem esperar nada
     }
-    try { await audio.play(); } catch { /* o navegador não deixou tocar sem um toque da pessoa */ }
+    try { await audio.play(); return true; } catch { return false; /* o navegador não deixou tocar sem um toque da pessoa */ }
+  }
+  // Se o navegador bloqueou o som ao carregar (iPhone), ele começa no primeiro toque da pessoa na página
+  function aguardarToque() {
+    const ligar = () => {
+      ['click', 'touchend', 'keydown'].forEach((e) => document.removeEventListener(e, ligar, true));
+      tocar();
+    };
+    ['click', 'touchend', 'keydown'].forEach((e) => document.addEventListener(e, ligar, true));
   }
   const progressoDe = () => {
     const total = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : 24;
@@ -808,7 +820,7 @@ const som = (function () {
   };
   window.addEventListener('pagehide', () => audio?.pause());
   // Veio do botão de diagnóstico do site: liga já ao carregar (o Chrome libera, pois o clique foi no mesmo site)
-  try { if (SOM_ATIVO && sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar(); } } catch { /* sem armazenamento */ }
+  try { if (SOM_ATIVO && sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar().then((ok) => { if (!ok) aguardarToque(); }); } } catch { /* sem armazenamento */ }
 
   return {
     /**
