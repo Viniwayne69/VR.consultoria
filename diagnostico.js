@@ -4,6 +4,8 @@
 // Vazio: o WhatsApp abre só com a mensagem pronta e a pessoa escolhe o contato.
 const WHATSAPP_NUMBER = '';
 const SOM_ARQUIVO = 'assets/audio/diagnostico-vinicius.mp3';
+// Som desligado por enquanto: com false o botão "Som" não aparece e nada toca. Troque para true para ligar o áudio de novo.
+const SOM_ATIVO = false;
 
 // ============================ Conteúdo: perguntas, áreas e perfis ============================
 // Para mudar uma pergunta, opção, perfil ou rótulo, edite aqui: o resto só lê destes dados.
@@ -509,6 +511,7 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
  * desligado quando termina e para ao sair da página.
  */
 (function som() {
+  if (!SOM_ATIVO) return;
   const caixa = document.getElementById('dx-sound');
   let audio = null;
   const icone = (ligado) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/>${ligado ? '<path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
