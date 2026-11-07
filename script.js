@@ -252,9 +252,8 @@ if (compare) {
     position = clamp(value, 0, 100);
     const rounded = Math.round(position);
     compare.style.setProperty('--pos', `${position.toFixed(2)}%`);
-    // Linha à direita = mais ANTES (a seção esfria); à esquerda = mais DEPOIS (a seção acende).
+    // Linha à esquerda = mais DEPOIS (a seção acende); à direita (ANTES) o fundo fica normal.
     const lean = (position - 50) / 50;
-    compareSection.style.setProperty('--cool', Math.max(lean, 0).toFixed(3));
     compareSection.style.setProperty('--glow', Math.max(-lean, 0).toFixed(3));
     compare.setAttribute('aria-valuenow', String(rounded));
     compare.setAttribute('aria-valuetext', rounded < 50 ? 'Mostrando mais o depois: cliente escolhendo você.'

@@ -78,9 +78,9 @@ p {text-wrap:pretty}
 .stamp {transform:rotate(-8deg)}
 .before-after {padding-block:48px}
 .before-after h2 {color:var(--vinho)}
-/* Ao arrastar para o ANTES a seção esfria (cinza); para o DEPOIS ela acende. O script escreve --cool e --glow (0 a 1). */
+/* Ao arrastar para o DEPOIS a seção acende (tom quente); no ANTES ela fica com o fundo normal. O script escreve --glow (0 a 1). */
 @supports (color:color-mix(in srgb,red,blue)) {
-  .before-after {--cool:0;--glow:0;background-color:color-mix(in srgb,color-mix(in srgb,var(--papel),#FBF2DF calc(var(--glow) * 100%)),#A9ACB0 calc(var(--cool) * 100%));transition:background-color .6s ease}
+  .before-after {--glow:0;background-color:color-mix(in srgb,var(--papel),#FBF2DF calc(var(--glow) * 100%));transition:background-color .6s ease}
 }
 /* Comparador arrastável: --pos (0 a 100%) é escrito pelo script e move a linha, o botão e o recorte da imagem "depois" */
 .ba {--pos:50%;position:relative;overflow:hidden;max-width:1040px;margin:28px auto 0;aspect-ratio:3/2;border:1px solid var(--grafite);background:var(--cimento);touch-action:pan-y;user-select:none;-webkit-user-select:none}
