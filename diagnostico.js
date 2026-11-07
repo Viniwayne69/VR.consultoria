@@ -82,9 +82,6 @@ const t = {
     nota: 'Menos de 2 minutos',
   },
 
-  som: 'Ouça o áudio sobre o diagnóstico',
-  somCurto: 'Som',
-  somLigado: 'Som ligado',
   ok: 'OK',
   dicaEnter: 'ou pressione Enter',
   voltar: 'Voltar',
@@ -717,24 +714,14 @@ function iniciarOrbe(canvas) {
 document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-1, estado.etapa - 1)));
 
 /**
- * Botão de som: o áudio explicando o diagnóstico (cerca de 25 segundos). O navegador só deixa o áudio tocar depois de um
- * toque da pessoa, então ele só é baixado e começa quando ela liga (ou veio do botão do site). Toca uma vez, volta ao botão
- * desligado quando termina e para ao sair da página.
+ * Áudio explicando o diagnóstico (cerca de 25 segundos). Não há botão: ele só toca quando a pessoa vem de um botão de
+ * diagnóstico do site (o clique deixa um recado e a página liga o som ao carregar). Toca uma vez, para ao sair da página
+ * e alimenta o orbe com o volume da voz.
  */
 const som = (function () {
-  const caixa = document.getElementById('dx-sound');
   let audio = null;
   let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
   let dados = null;
-  const icone = (ligado) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/>${ligado ? '<path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
-  const botao = h('button', { type: 'button', class: 'dx-sound', 'aria-pressed': 'false', 'aria-label': t.som, title: t.som });
-  const pintar = (ligado) => {
-    botao.setAttribute('aria-pressed', String(ligado));
-    botao.innerHTML = `${icone(ligado)}<span></span>`;
-    botao.querySelector('span').textContent = ligado ? t.somLigado : t.somCurto;
-  };
-  pintar(false);
-  const ligado = () => botao.getAttribute('aria-pressed') === 'true';
   // O áudio passa por um analisador (Web Audio) antes de sair. Só entra no caminho se o navegador deixar o contexto rodar:
   // um áudio ligado a um contexto parado ficaria mudo. Sem análise, o orbe usa um movimento simulado.
   async function prepararAnalise() {
@@ -756,19 +743,11 @@ const som = (function () {
   async function tocar() {
     if (!audio) {
       audio = new Audio(SOM_ARQUIVO);
-      audio.addEventListener('ended', () => pintar(false));
       await prepararAnalise();
     }
-    try { await audio.play(); pintar(true); } catch { pintar(false); }
+    try { await audio.play(); } catch { /* o navegador não deixou tocar sem um toque da pessoa */ }
   }
-  if (!SOM_ATIVO) botao.setAttribute('aria-disabled', 'true');
-  botao.addEventListener('click', () => {
-    if (!SOM_ATIVO) return;
-    if (ligado()) { audio.pause(); pintar(false); return; }
-    tocar();
-  });
   window.addEventListener('pagehide', () => audio?.pause());
-  caixa.append(botao);
   // Veio do botão de diagnóstico do site: liga já ao carregar (o Chrome libera, pois o clique foi no mesmo site)
   try { if (SOM_ATIVO && sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar(); } } catch { /* sem armazenamento */ }
 

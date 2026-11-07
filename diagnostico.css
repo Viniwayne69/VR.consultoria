@@ -26,11 +26,6 @@
 .dx-steps .is-now {background:var(--papel);animation:laminaAgora 1.1s ease-in-out infinite alternate}
 @keyframes laminaAgora {from {background:var(--papel)} to {background:var(--fogo-claro)}}
 
-/* Botão de som: quadrado de linha fina */
-.dx-sound {display:inline-flex;align-items:center;gap:10px;height:42px;padding:0 14px;border:1px solid var(--grafite);background:transparent;color:var(--papel);font:700 10px/1 var(--body-font);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:border-color .18s ease,background-color .18s ease,color .18s ease}
-.dx-sound:hover {border-color:var(--fogo)}
-.dx-sound[aria-pressed="true"] {border-color:var(--fogo);background:var(--fogo);color:var(--tinta)}
-.dx-sound svg {width:18px;height:18px;flex:none}
 
 .dx-main {flex:1;display:flex;align-items:center;padding-block:36px}
 .dx.is-claro .dx-main {align-items:flex-start;padding-bottom:0}
