@@ -290,9 +290,18 @@ function desenhar() {
 }
 
 // ---------- Boas-vindas ----------
+/** Orbe que se mexe com a voz do áudio; some sozinho se o navegador não tiver WebGL. */
+function orbeDaVoz() {
+  const canvas = h('canvas', { class: 'dx-orb-canvas' });
+  const caixa = h('div', { class: 'dx-orb', 'aria-hidden': 'true' }, canvas);
+  if (!iniciarOrbe(canvas)) caixa.hidden = true;
+  return caixa;
+}
+
 function telaBoasVindas() {
   return h('div', { class: 'dx-welcome' },
     h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
+    orbeDaVoz(),
     // Tudo gira em torno do botão: placa vinho inclinada atrás dele e anéis que pulsam para fora
     h('div', { class: 'dx-go' },
       h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
@@ -496,6 +505,207 @@ function contarNota(alvo) {
   contagemFrame = requestAnimationFrame(passo);
 }
 
+// ============================ Orbe da voz ============================
+// Esfera de luz desenhada em WebGL (sem bibliotecas), nas cores da VR: núcleo laranja e pêssego, borda vinho.
+// O volume do áudio que está tocando (voz) dá o movimento: com a voz alta o orbe gira, ondula e infla; nas pausas ele acalma.
+const ORBE_VERT = `
+  precision highp float;
+  attribute vec2 position;
+  varying vec2 vUv;
+  void main() {
+    vUv = position * 0.5 + 0.5;
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+`;
+
+const ORBE_FRAG = `
+  precision highp float;
+  uniform float iTime;
+  uniform vec3 iResolution;
+  uniform float hover;
+  uniform float rot;
+  uniform float hoverIntensity;
+  uniform float uLevel;
+  varying vec2 vUv;
+
+  vec3 hash33(vec3 p3) {
+    p3 = fract(p3 * vec3(0.1031, 0.11369, 0.13787));
+    p3 += dot(p3, p3.yxz + 19.19);
+    return -1.0 + 2.0 * fract(vec3(p3.x + p3.y, p3.x + p3.z, p3.y + p3.z) * p3.zyx);
+  }
+
+  float snoise3(vec3 p) {
+    const float K1 = 0.333333333;
+    const float K2 = 0.166666667;
+    vec3 i = floor(p + (p.x + p.y + p.z) * K1);
+    vec3 d0 = p - (i - (i.x + i.y + i.z) * K2);
+    vec3 e = step(vec3(0.0), d0 - d0.yzx);
+    vec3 i1 = e * (1.0 - e.zxy);
+    vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+    vec3 d1 = d0 - (i1 - K2);
+    vec3 d2 = d0 - (i2 - K1);
+    vec3 d3 = d0 - 0.5;
+    vec4 h = max(0.6 - vec4(dot(d0, d0), dot(d1, d1), dot(d2, d2), dot(d3, d3)), 0.0);
+    vec4 n = h * h * h * h * vec4(dot(d0, hash33(i)), dot(d1, hash33(i + i1)), dot(d2, hash33(i + i2)), dot(d3, hash33(i + 1.0)));
+    return dot(vec4(31.316), n);
+  }
+
+  vec4 extractAlpha(vec3 colorIn) {
+    float a = max(max(colorIn.r, colorIn.g), colorIn.b);
+    return vec4(colorIn.rgb / (a + 1e-5), a);
+  }
+
+  // Cores da marca: laranja (fogo), pêssego e vinho
+  const vec3 color1 = vec3(0.941176, 0.376471, 0.101961);
+  const vec3 color2 = vec3(1.0, 0.760784, 0.560784);
+  const vec3 color3 = vec3(0.603922, 0.121569, 0.2);
+  const float innerRadius = 0.6;
+  const float noiseScale = 0.65;
+
+  float light1(float intensity, float attenuation, float dist) {
+    return intensity / (1.0 + dist * attenuation);
+  }
+
+  float light2(float intensity, float attenuation, float dist) {
+    return intensity / (1.0 + dist * dist * attenuation);
+  }
+
+  vec4 draw(vec2 uv) {
+    float ang = atan(uv.y, uv.x);
+    float len = length(uv);
+    float invLen = len > 0.0 ? 1.0 / len : 0.0;
+
+    float n0 = snoise3(vec3(uv * noiseScale, iTime * 0.5)) * 0.5 + 0.5;
+    float r0 = mix(mix(innerRadius, 1.0, 0.4), mix(innerRadius, 1.0, 0.6), n0);
+    float d0 = distance(uv, (r0 * invLen) * uv);
+    float v0 = light1(1.0, 10.0, d0);
+    v0 *= smoothstep(r0 * 1.05, r0, len);
+    float cl = cos(ang + iTime * 2.0) * 0.5 + 0.5;
+
+    float a = iTime * -1.0;
+    vec2 pos = vec2(cos(a), sin(a)) * r0;
+    float d = distance(uv, pos);
+    float v1 = light2(1.5, 5.0, d);
+    v1 *= light1(1.0, 50.0, d0);
+
+    float v2 = smoothstep(1.0, mix(innerRadius, 1.0, n0 * 0.5), len);
+    float v3 = smoothstep(innerRadius, mix(innerRadius, 1.0, 0.5), len);
+
+    vec3 col = mix(color1, color2, cl);
+    col = mix(color3, col, v0);
+    col = (col + v1) * v2 * v3;
+    col = clamp(col, 0.0, 1.0);
+
+    return extractAlpha(col);
+  }
+
+  void main() {
+    vec2 fragCoord = vUv * iResolution.xy;
+    vec2 center = iResolution.xy * 0.5;
+    float size = min(iResolution.x, iResolution.y);
+    vec2 uv = (fragCoord - center) / size * 2.0;
+
+    // A voz infla o orbe
+    uv /= 1.0 + uLevel * 0.2;
+
+    float s = sin(rot);
+    float c = cos(rot);
+    uv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y);
+
+    uv.x += hover * hoverIntensity * 0.1 * sin(uv.y * 10.0 + iTime);
+    uv.y += hover * hoverIntensity * 0.1 * sin(uv.x * 10.0 + iTime);
+
+    vec4 col = draw(uv);
+    gl_FragColor = vec4(col.rgb * col.a, col.a);
+  }
+`;
+
+/** Liga o orbe a um <canvas>. Termina sozinho quando o canvas sai da página. Devolve false se o navegador não tiver WebGL. */
+function iniciarOrbe(canvas) {
+  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true });
+  if (!gl) return false;
+
+  const compilar = (tipo, codigo) => {
+    const shader = gl.createShader(tipo);
+    gl.shaderSource(shader, codigo);
+    gl.compileShader(shader);
+    return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+  };
+  const vert = compilar(gl.VERTEX_SHADER, ORBE_VERT);
+  const frag = compilar(gl.FRAGMENT_SHADER, ORBE_FRAG);
+  if (!vert || !frag) return false;
+  const programa = gl.createProgram();
+  gl.attachShader(programa, vert);
+  gl.attachShader(programa, frag);
+  gl.linkProgram(programa);
+  if (!gl.getProgramParameter(programa, gl.LINK_STATUS)) return false;
+  gl.useProgram(programa);
+
+  // Um triângulo que cobre a tela inteira do canvas
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  const posicao = gl.getAttribLocation(programa, 'position');
+  gl.enableVertexAttribArray(posicao);
+  gl.vertexAttribPointer(posicao, 2, gl.FLOAT, false, 0, 0);
+
+  const u = (nome) => gl.getUniformLocation(programa, nome);
+  const uTempo = u('iTime');
+  const uTamanho = u('iResolution');
+  const uHover = u('hover');
+  const uRot = u('rot');
+  const uIntensidade = u('hoverIntensity');
+  const uNivel = u('uLevel');
+  gl.clearColor(0, 0, 0, 0);
+
+  let rot = 0;
+  let suave = 0;
+  let ultimo = 0;
+  let quadro = 0;
+
+  const pintarQuadro = (tempo, nivel) => {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const largura = Math.round(canvas.clientWidth * dpr);
+    const altura = Math.round(canvas.clientHeight * dpr);
+    if (!largura || !altura) return;
+    if (canvas.width !== largura || canvas.height !== altura) {
+      canvas.width = largura;
+      canvas.height = altura;
+      gl.viewport(0, 0, largura, altura);
+    }
+    gl.uniform1f(uTempo, tempo);
+    gl.uniform3f(uTamanho, largura, altura, largura / altura);
+    gl.uniform1f(uHover, Math.min(nivel * 2, 1));
+    gl.uniform1f(uIntensidade, Math.min(nivel * 0.64, 0.8));
+    gl.uniform1f(uRot, rot);
+    gl.uniform1f(uNivel, nivel);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  // Sem movimento (prefers-reduced-motion): um quadro parado
+  if (semMovimento()) {
+    requestAnimationFrame(() => pintarQuadro(2.5, 0.1));
+    return true;
+  }
+
+  const passo = (agora) => {
+    if (!canvas.isConnected) { gl.getExtension('WEBGL_lose_context')?.loseContext(); return; }
+    quadro = requestAnimationFrame(passo);
+    const dt = Math.min((agora - ultimo) * 0.001, 0.05);
+    ultimo = agora;
+    // Sobe rápido com a voz e desce devagar, para acompanhar cada palavra sem tremer
+    const voz = som.nivel();
+    suave += (voz - suave) * (voz > suave ? 0.5 : 0.12);
+    // Parado, o orbe "respira" devagar
+    const respira = 0.06 + 0.04 * Math.sin(agora * 0.0015);
+    const nivel = Math.min(suave + respira, 1);
+    rot += dt * (0.15 + nivel * 2.4);
+    pintarQuadro(agora * 0.001, nivel);
+  };
+  quadro = requestAnimationFrame(passo);
+  return true;
+}
+
 // ============================ Voltar e som ============================
 document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-1, estado.etapa - 1)));
 
@@ -504,9 +714,11 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
  * toque da pessoa, então ele só é baixado e começa quando ela liga (ou veio do botão do site). Toca uma vez, volta ao botão
  * desligado quando termina e para ao sair da página.
  */
-(function som() {
+const som = (function () {
   const caixa = document.getElementById('dx-sound');
   let audio = null;
+  let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
+  let dados = null;
   const icone = (ligado) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/>${ligado ? '<path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
   const botao = h('button', { type: 'button', class: 'dx-sound', 'aria-pressed': 'false', 'aria-label': t.som, title: t.som });
   const pintar = (ligado) => {
@@ -516,8 +728,30 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
   };
   pintar(false);
   const ligado = () => botao.getAttribute('aria-pressed') === 'true';
+  // O áudio passa por um analisador (Web Audio) antes de sair. Só entra no caminho se o navegador deixar o contexto rodar:
+  // um áudio ligado a um contexto parado ficaria mudo. Sem análise, o orbe usa um movimento simulado.
+  async function prepararAnalise() {
+    try {
+      const Contexto = window.AudioContext || window.webkitAudioContext;
+      if (!Contexto) return;
+      const contexto = new Contexto();
+      await contexto.resume().catch(() => {});
+      if (contexto.state !== 'running') { contexto.close(); return; }
+      const fonte = contexto.createMediaElementSource(audio);
+      analisador = contexto.createAnalyser();
+      analisador.fftSize = 512;
+      analisador.smoothingTimeConstant = 0.3;
+      fonte.connect(analisador);
+      analisador.connect(contexto.destination);
+      dados = new Uint8Array(analisador.frequencyBinCount);
+    } catch { analisador = null; }
+  }
   async function tocar() {
-    if (!audio) { audio = new Audio(SOM_ARQUIVO); audio.addEventListener('ended', () => pintar(false)); }
+    if (!audio) {
+      audio = new Audio(SOM_ARQUIVO);
+      audio.addEventListener('ended', () => pintar(false));
+      await prepararAnalise();
+    }
     try { await audio.play(); pintar(true); } catch { pintar(false); }
   }
   if (!SOM_ATIVO) botao.setAttribute('aria-disabled', 'true');
@@ -530,6 +764,24 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
   caixa.append(botao);
   // Veio do botão de diagnóstico do site: liga já ao carregar (o Chrome libera, pois o clique foi no mesmo site)
   try { if (SOM_ATIVO && sessionStorage.getItem('vr-som')) { sessionStorage.removeItem('vr-som'); tocar(); } } catch { /* sem armazenamento */ }
+
+  return {
+    /** Volume da voz agora, de 0 a 1 (0 com o áudio parado). */
+    nivel() {
+      if (!audio || audio.paused || audio.ended) return 0;
+      if (analisador) {
+        analisador.getByteFrequencyData(dados);
+        // Só a faixa da voz (até uns 4 kHz), em RMS, como no orbe original
+        const ate = Math.min(dados.length, 48);
+        let soma = 0;
+        for (let i = 0; i < ate; i++) { const v = dados[i] / 255; soma += v * v; }
+        return Math.min(Math.sqrt(soma / ate) * 1.5 * 3, 1);
+      }
+      // Sem análise: ondas somadas que lembram a fala
+      const tempo = performance.now() * 0.001;
+      return Math.max(0, 0.35 + 0.25 * Math.sin(tempo * 5.1) * Math.sin(tempo * 1.7) + 0.15 * Math.sin(tempo * 11.3));
+    },
+  };
 })();
 
 desenhar();
