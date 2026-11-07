@@ -4,6 +4,8 @@
 // Vazio: o WhatsApp abre só com a mensagem pronta e a pessoa escolhe o contato.
 const WHATSAPP_NUMBER = '';
 const SOM_ARQUIVO = 'assets/audio/diagnostico.mp3';
+// Gravação do que o analisador ao vivo entrega ao orbe com este áudio (usada só no iPhone, que não usa o analisador ao vivo)
+const SOM_ONDAS = 'assets/audio/diagnostico-ondas.json';
 // Som ligado: com false o ícone "Som" continua no cabeçalho, mas nada toca (nem ao clicar).
 const SOM_ATIVO = true;
 
@@ -673,7 +675,7 @@ const ORBE_FRAG = `
 
 /** Liga o orbe a um <canvas>. Termina sozinho quando o canvas sai da página. Devolve false se o navegador não tiver WebGL. */
 function iniciarOrbe(canvas) {
-  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true });
+  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false });
   if (!gl) return false;
 
   const compilar = (tipo, codigo) => {
@@ -718,7 +720,7 @@ function iniciarOrbe(canvas) {
   let quadro = 0;
 
   const pintarQuadro = (tempo, v, prog) => {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const largura = Math.round(canvas.clientWidth * dpr);
     const altura = Math.round(canvas.clientHeight * dpr);
     if (!largura || !altura) return;
@@ -777,7 +779,8 @@ document.querySelector('.dx-header .brand')?.addEventListener('click', (e) => {
 /**
  * Áudio explicando o diagnóstico (cerca de 25 segundos). Não há botão: ele só toca quando a pessoa vem de um botão de
  * diagnóstico do site (o clique deixa um recado e a página liga o som ao carregar). Toca uma vez, para ao sair da página
- * e alimenta o orbe com o volume da voz.
+ * e alimenta o orbe com o volume da voz: ao vivo por um analisador (Web Audio) no computador e no Android; no iPhone, onde o
+ * som do Web Audio some com a chave de silencioso, sem analisador, tocando a gravação do mesmo analisador em sincronia com o áudio.
  */
 const som = (function () {
   let audio = null;
@@ -786,6 +789,10 @@ const som = (function () {
   let tocouUmaVez = false; // o áudio toca uma vez só: depois disso o botão não liga de novo
   let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
   let dados = null;
+  let curva = null; // iPhone: gravação do analisador, um ponto por quadro (taxa por segundo), em porcentagem
+  if (ehIOS) {
+    fetch(SOM_ONDAS).then((r) => r.json()).then((j) => { if (j && j.taxa && Array.isArray(j.nivel)) curva = j; }).catch(() => { /* sem a gravação: movimento simulado */ });
+  }
   // Aberto por cima do site (iframe), o áudio e o analisador já vêm ligados pelo clique no botão do site
   try {
     const doSite = window.parent !== window ? window.parent.__vrSom : null;
@@ -796,9 +803,9 @@ const som = (function () {
     }
   } catch { /* página aberta direto, sem o site por baixo */ }
   // O áudio passa por um analisador (Web Audio) antes de sair. Só entra no caminho se o navegador deixar o contexto rodar:
-  // um áudio ligado a um contexto parado ficaria mudo. Sem análise, o orbe usa um movimento simulado.
+  // um áudio ligado a um contexto parado ficaria mudo. No iPhone não há analisador ao vivo (o orbe toca a gravação dele).
   async function prepararAnalise() {
-    if (ehIOS) return; // lá o orbe usa o movimento simulado
+    if (ehIOS) return;
     try {
       const Contexto = window.AudioContext || window.webkitAudioContext;
       if (!Contexto) return;
@@ -815,12 +822,11 @@ const som = (function () {
     } catch { analisador = null; }
   }
   async function tocar() {
-    if (!audio) {
-      audio = new Audio(SOM_ARQUIVO);
-      audio.preload = 'auto';
-      if (!ehIOS) await prepararAnalise(); // no iPhone o play() tem de sair direto do toque, sem esperar nada
-    }
-    try { await audio.play(); tocouUmaVez = true; return true; } catch { return false; /* o navegador não deixou tocar sem um toque da pessoa */ }
+    const novo = !audio;
+    if (novo) { audio = new Audio(SOM_ARQUIVO); audio.preload = 'auto'; }
+    const inicio = audio.play(); // sai direto do toque da pessoa, sem esperar nada (o iPhone exige)
+    if (novo) prepararAnalise(); // o analisador entra logo depois que o som começa
+    try { await inicio; tocouUmaVez = true; return true; } catch { return false; /* o navegador não deixou tocar sem um toque da pessoa */ }
   }
   // Se o navegador bloqueou o som ao carregar (iPhone), ele começa no primeiro toque da pessoa na página
   function aguardarToque() {
@@ -864,7 +870,16 @@ const som = (function () {
         const agudos = faixa(14, 48);
         return { nivel: Math.min(faixa(0, 48) * 1.4, 1), graves, medios, agudos, progresso };
       }
-      // Sem análise: ondas que se misturam sem repetir e acompanham o andamento do áudio
+      if (curva) {
+        // Mesmo movimento do analisador ao vivo: lê a gravação no ponto em que o áudio está (entre dois quadros, interpola)
+        const x = Math.max(audio.currentTime * curva.taxa, 0);
+        const i = Math.min(Math.floor(x), curva.nivel.length - 1);
+        const j = Math.min(i + 1, curva.nivel.length - 1);
+        const f = Math.min(x - i, 1);
+        const ponto = (s) => (s[i] + (s[j] - s[i]) * f) / 100;
+        return { nivel: ponto(curva.nivel), graves: ponto(curva.graves), medios: ponto(curva.medios), agudos: ponto(curva.agudos), progresso };
+      }
+      // Sem análise nem gravação: ondas que se misturam sem repetir e acompanham o andamento do áudio
       const t = audio.currentTime;
       const fala = 0.5 + 0.5 * Math.sin(t * 3.1 + Math.sin(t * 0.7) * 2.4);
       const faixa = (a, b, c) => Math.max(0, Math.min(1, fala * (0.55 + 0.45 * Math.sin(t * a + Math.sin(t * b) * c))));

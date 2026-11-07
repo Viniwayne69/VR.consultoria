@@ -453,3 +453,10 @@ body {overflow-x:clip}
   .hero-stamp {transform:rotate(-8deg)}
   .button {translate:none}
 }
+
+/* Diagnóstico aberto por cima do site: cobre a tela toda (inclusive sob as barras do Safari) e trava e esconde o site por baixo */
+.dx-overlay {position:fixed;top:0;left:0;width:100%;height:100vh;height:100lvh;border:0;z-index:9999;background:#111012}
+html.dx-aberto {background:#111012}
+html.dx-aberto body {position:fixed;left:0;right:0;width:100%}
+html.dx-aberto body > :not(.dx-overlay) {visibility:hidden}
+html.dx-aberto body > :not(.dx-overlay) * {animation-play-state:paused !important}

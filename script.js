@@ -13,14 +13,16 @@ const PHOTO_ALT = 'Retrato de Vinicius Ribeiro, consultor de marca e vendas.';
 const SOM_ARQUIVO = 'assets/audio/diagnostico.mp3';
 const ehIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 let quadroDiagnostico = null;
+let rolagemAntes = 0;
 
 function ligarSom() {
   const audio = new Audio(SOM_ARQUIVO);
   audio.preload = 'auto';
   const som = { audio, analisador: null };
   audio.play().catch(() => { /* sem permissão: o diagnóstico tenta de novo no primeiro toque */ });
-  // Para o orbe seguir a voz, o áudio passa por um analisador (Web Audio). Só entra no caminho se o contexto estiver rodando
-  // (senão o áudio ficaria mudo) e nunca no iPhone, onde o som do Web Audio some com a chave de silencioso.
+  // Para o orbe seguir a voz, o áudio passa por um analisador (Web Audio) no computador e no Android. Só entra no caminho se o
+  // contexto estiver rodando (senão o áudio ficaria mudo). No iPhone não é usado: o som do Web Audio some com a chave de
+  // silencioso, e lá o orbe toca a gravação do analisador (diagnostico-ondas.json).
   if (!ehIOS) {
     try {
       const Contexto = window.AudioContext || window.webkitAudioContext;
@@ -43,13 +45,16 @@ function ligarSom() {
 function abrirDiagnostico() {
   if (quadroDiagnostico) return;
   window.__vrSom = ligarSom();
+  rolagemAntes = window.scrollY;
   const quadro = document.createElement('iframe');
+  quadro.className = 'dx-overlay';
   quadro.src = CTA_URL + '?embed=1';
   quadro.title = 'Diagnóstico';
-  quadro.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:9999;background:#111012';
   quadro.addEventListener('load', () => { try { quadro.contentWindow.focus(); } catch { /* nada */ } });
   document.body.appendChild(quadro);
-  document.documentElement.style.overflow = 'hidden';
+  // Trava o site por baixo (no iPhone o overflow sozinho não impede a rolagem) e esconde o que sobrar atrás do diagnóstico
+  document.body.style.top = -rolagemAntes + 'px';
+  document.documentElement.classList.add('dx-aberto');
   history.pushState({ vrDiagnostico: true }, '', '#diagnostico');
   quadroDiagnostico = quadro;
 }
@@ -58,7 +63,9 @@ function fecharDiagnostico() {
   if (!quadroDiagnostico) return;
   quadroDiagnostico.remove();
   quadroDiagnostico = null;
-  document.documentElement.style.overflow = '';
+  document.documentElement.classList.remove('dx-aberto');
+  document.body.style.top = '';
+  window.scrollTo(0, rolagemAntes);
   try { window.__vrSom?.audio.pause(); } catch { /* nada */ }
   window.__vrSom = null;
 }
