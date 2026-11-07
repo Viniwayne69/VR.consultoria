@@ -34,7 +34,7 @@ A página `diagnostico.html` leva a lógica do diagnóstico da HAZE (perguntas, 
 - **Pontuação:** cada resposta de dor vale 0, 1 ou 2 pontos (0 a 22 no total); a nota de 1 a 10 mede o quanto a marca é desejada, e as seis áreas (Desejo, Vendas, Preço, Dinheiro, Liberdade, Futuro) mostram o ponto mais fraco no radar.
 - **Perfis e padrões:** o título do resultado vem de um padrão entre duas áreas ou, sem padrão, do perfil pela pontuação. Tudo fica nos dados do topo de `diagnostico.js`, junto com as perguntas, opções e textos.
 - **WhatsApp:** no topo de `diagnostico.js`, preencha `WHATSAPP_NUMBER` com DDI e DDD, só números (exemplo: `5581999999999`). Vazio, o botão abre o WhatsApp só com a mensagem pronta e a pessoa escolhe o contato. As respostas não vão para nenhum servidor: chegam a você pela mensagem.
-- **Som:** botão no cabeçalho liga uma música em loop (`assets/audio/get-away.mp3`, volume baixo) só depois do toque da pessoa. Troque o arquivo ou o caminho em `SOM_ARQUIVO`.
+- **Som:** o áudio (`assets/audio/get-away.mp3`, em loop e com volume baixo) começa sozinho quando a pessoa clica em "Iniciar diagnóstico gratuito", porque o navegador só libera o som depois de um toque. O botão do cabeçalho liga e desliga, e se a pessoa desligar ele não volta sozinho. Troque o arquivo ou o caminho em `SOM_ARQUIVO`.
 - **Teclado:** A, B, C... escolhem a opção, Enter avança nos campos. Com `prefers-reduced-motion`, as animações são desligadas.
 ## Sua foto
 

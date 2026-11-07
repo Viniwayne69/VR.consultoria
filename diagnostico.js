@@ -296,7 +296,7 @@ function telaBoasVindas() {
       h('p', { class: 'eyebrow' }, t.boasVindas.rotulo),
       h('h1', { class: 'dx-display' }, `${t.boasVindas.antes} `, accent(t.boasVindas.destaque), ` ${t.boasVindas.depois}`),
       h('p', { class: 'dx-lead' }, t.boasVindas.paragrafo),
-      h('button', { type: 'button', class: 'button', onclick: () => ir(0) }, t.boasVindas.botao)),
+      h('button', { type: 'button', class: 'button', onclick: () => { som.ligarAoIniciar(); ir(0); } }, t.boasVindas.botao)),
     h('div', { class: 'dx-visual' },
       h('div', { class: 'dx-photo' },
         h('div', { class: 'dx-photo-frame' },
@@ -507,9 +507,10 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
  * Botão de som: o navegador só deixa o áudio tocar depois de um toque da pessoa, então a música só é baixada e começa
  * quando ela liga. Fica em loop, com volume baixo, e para ao sair da página.
  */
-(function som() {
+const som = (function () {
   const caixa = document.getElementById('dx-sound');
   let audio = null;
+  let manual = false; // se a pessoa mexeu no botão, o início do diagnóstico não liga o som por cima da escolha dela
   const icone = (ligado) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/>${ligado ? '<path d="M15.5 9a4 4 0 0 1 0 6"/><path d="M18 6.5a8 8 0 0 1 0 11"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>'}</svg>`;
   const botao = h('button', { type: 'button', class: 'dx-sound', 'aria-pressed': 'false', 'aria-label': t.som, title: t.som });
   const pintar = (ligado) => {
@@ -518,13 +519,20 @@ document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-
     botao.querySelector('span').textContent = ligado ? t.somLigado : t.somCurto;
   };
   pintar(false);
-  botao.addEventListener('click', async () => {
+  const ligado = () => botao.getAttribute('aria-pressed') === 'true';
+  async function tocar() {
     if (!audio) { audio = new Audio(SOM_ARQUIVO); audio.loop = true; audio.volume = 0.35; }
-    if (botao.getAttribute('aria-pressed') === 'true') { audio.pause(); pintar(false); return; }
     try { await audio.play(); pintar(true); } catch { pintar(false); }
+  }
+  botao.addEventListener('click', () => {
+    manual = true;
+    if (ligado()) { audio.pause(); pintar(false); return; }
+    tocar();
   });
   window.addEventListener('pagehide', () => audio?.pause());
   caixa.append(botao);
+  // Chamado pelo botão "Iniciar diagnóstico": o toque da pessoa libera o áudio no navegador
+  return { ligarAoIniciar() { if (!manual && !ligado()) tocar(); } };
 })();
 
 desenhar();
