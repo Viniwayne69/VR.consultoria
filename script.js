@@ -79,6 +79,7 @@ document.querySelectorAll('[data-cta]').forEach((link) => {
   link.addEventListener('click', (e) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
+    window.vrEfeitos?.tocar('iniciar');
     abrirDiagnostico();
   });
 });
@@ -118,6 +119,7 @@ function closeMenu(returnFocus = false) {
   if (returnFocus) menuButton.focus();
 }
 menuButton.addEventListener('click', () => {
+  window.vrEfeitos?.tocar('tecla');
   const opening = menuButton.getAttribute('aria-expanded') !== 'true';
   menuButton.setAttribute('aria-expanded', String(opening));
   menuButton.setAttribute('aria-label', opening ? 'Fechar menu de navegação' : 'Abrir menu de navegação');
@@ -188,6 +190,7 @@ function setFaq(button, expanded) {
 }
 faqButtons.forEach((button, index) => {
   button.addEventListener('click', () => {
+    window.vrEfeitos?.tocar('tecla');
     const opening = button.getAttribute('aria-expanded') === 'false';
     faqButtons.forEach((other) => setFaq(other, false));
     setFaq(button, opening);

@@ -9,6 +9,10 @@ const WHATSAPP_NUMBER = '';
 const SOM_ARQUIVO = 'assets/audio/diagnostico.mp3';
 // Gravação do que o analisador ao vivo entrega ao orbe com este áudio (usada só no iPhone, que não usa o analisador ao vivo)
 const SOM_ONDAS = 'assets/audio/diagnostico-ondas.json';
+// Voz de cada pergunta (pergunta-01.mp3 a pergunta-16.mp3, na ordem das perguntas) a do cálculo do resultado e a do resultado
+const SOM_PERGUNTA = (n) => `assets/audio/perguntas/pergunta-${String(n).padStart(2, '0')}.mp3`;
+const SOM_CALCULANDO = 'assets/audio/perguntas/calculando.mp3';
+const SOM_RESULTADO = 'assets/audio/perguntas/resultado.mp3'; // fala quando o resultado aparece
 // Som ligado: com false o ícone "Som" continua no cabeçalho, mas nada toca (nem ao clicar).
 const SOM_ATIVO = true;
 
@@ -207,6 +211,9 @@ progresso.append(...laminas);
 
 const primeiroNome = () => capitalizar((respostas.nome.trim().split(/\s+/)[0]) || '');
 
+// Efeito de som de um botão (vem de efeitos.js); nunca quebra a página se o som não estiver disponível
+const efeito = (nome) => { try { window.vrEfeitos?.tocar(nome); } catch { /* sem som */ } };
+
 function mostrarErro(mensagem) {
   if (erroEl) erroEl.textContent = mensagem;
 }
@@ -231,6 +238,7 @@ function avancar() {
   const mensagem = validar(pergunta);
   if (mensagem) { mostrarErro(mensagem); return; }
   vibrar(10);
+  efeito('ok');
   if (estado.etapa === total - 1) finalizar();
   else ir(estado.etapa + 1);
 }
@@ -248,6 +256,7 @@ function finalizar() {
 function escolherOpcao(pergunta, opcao, botao) {
   mostrarErro('');
   vibrar(10);
+  efeito('pop');
   respostas[pergunta.id] = opcao;
   palco.querySelectorAll('.dx-opt').forEach((b) => b.setAttribute('aria-pressed', String(b === botao)));
   setTimeout(() => { if (estado.etapa === perguntas.indexOf(pergunta)) ir(estado.etapa + 1); }, 260);
@@ -289,6 +298,12 @@ function desenhar() {
   if (etapa >= 0) (palco.querySelector('.dx-field') || palco.querySelector('h1'))?.focus({ preventScroll: true });
   if (resultado) { vibrar([20, 60, 20]); contarNota(calcularDiagnostico(respostas).nota); }
   window.scrollTo({ top: 0, behavior: 'instant' });
+
+  // A voz acompanha a etapa: cada pergunta tem a sua, o cálculo tem a dele e o resultado tem a sua
+  if (emPergunta) som.falar(`p${etapa}`, SOM_PERGUNTA(etapa + 1));
+  else if (estado.calculando) { som.falar('calculando', SOM_CALCULANDO); efeito('carregando'); }
+  else if (etapa === total) { som.falar('resultado', SOM_RESULTADO); efeito('estouro'); }
+  else som.calar(); // tela inicial
 }
 
 // ---------- Boas-vindas ----------
@@ -354,7 +369,7 @@ function botaoGrande() {
     h('span', { class: 'dx-go-plate', 'aria-hidden': 'true' }),
     h('div', { class: 'dx-go-key' },
       h('span', { class: 'dx-go-depth', 'aria-hidden': 'true' }),
-      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => { som.ligar(); ir(0); } }, t.boasVindas.botao)));
+      h('button', { type: 'button', class: 'button dx-go-btn', onclick: () => { efeito('iniciar'); ir(0); } }, t.boasVindas.botao)));
   inclinarBotao(caixa);
   return caixa;
 }
@@ -565,7 +580,7 @@ function telaResultado(resultado) {
       class: `res-area${a.id === fraco ? ' is-weak' : ''}`,
       'aria-pressed': 'false',
       style: `left:${((x / 300) * 100).toFixed(2)}%;top:${((y / 300) * 100).toFixed(2)}%;--d:${3300 + i * 90}ms`,
-      onclick: () => mostrarArea(a.id),
+      onclick: () => { efeito('tecla'); mostrarArea(a.id); },
     }, a.rotulo);
     botoesArea.push([botao, a.id]);
   });
@@ -589,7 +604,7 @@ function telaResultado(resultado) {
     sectionRadar,
     h('div', { class: 'res-cta-wrap res-entra', style: '--d:5600ms' },
       h('p', { class: 'res-legend' }, t.resultado.legendaBotao),
-      h('a', { class: 'button res-cta', href: link, target: '_blank', rel: 'noopener noreferrer' }, t.resultado.whatsappBotao)));
+      h('a', { class: 'button res-cta', href: link, target: '_blank', rel: 'noopener noreferrer', onclick: () => efeito('whatsapp') }, t.resultado.whatsappBotao)));
 }
 
 /** Número que sobe de 0 até a nota, começando depois de 1,3 s. */
@@ -824,7 +839,7 @@ function iniciarOrbe(canvas) {
 }
 
 // ============================ Voltar e som ============================
-document.getElementById('dx-back').addEventListener('click', () => ir(Math.max(-1, estado.etapa - 1)));
+document.getElementById('dx-back').addEventListener('click', () => { efeito('voltar'); ir(Math.max(-1, estado.etapa - 1)); });
 // Aberto por cima do site, a marca fecha o diagnóstico em vez de abrir o site de novo dentro dele
 document.querySelector('.dx-header .brand')?.addEventListener('click', (e) => {
   try {
@@ -842,6 +857,7 @@ const som = (function () {
   let audio = null;
   // No iPhone o Safari só deixa o áudio tocar depois de um toque, e o som que passa pelo Web Audio é mudo com a chave de silencioso
   const ehIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let atual = 'intro'; // qual áudio está carregado: a apresentação, a voz de uma pergunta (p0, p1...) ou a do resultado
   let tocouUmaVez = false; // o áudio toca uma vez só: depois disso o botão não liga de novo
   let analisador = null; // mede o volume da voz enquanto o áudio toca (alimenta o orbe)
   let dados = null;
@@ -884,6 +900,35 @@ const som = (function () {
     if (novo) prepararAnalise(); // o analisador entra logo depois que o som começa
     try { await inicio; tocouUmaVez = true; return true; } catch { return false; /* o navegador não deixou tocar sem um toque da pessoa */ }
   }
+  // Troca a faixa do mesmo elemento de áudio. No iPhone, só um elemento que já foi liberado por um toque pode tocar depois sem
+  // novo toque; por isso é sempre o mesmo elemento, e o analisador (computador e Android) continua ligado a ele.
+  let precarregado = false;
+  function precarregar() {
+    if (precarregado) return;
+    precarregado = true;
+    // Aquece o cache: as vozes são pequenas e assim cada pergunta começa a falar sem esperar a rede
+    const arquivos = Array.from({ length: perguntas.length }, (_, i) => SOM_PERGUNTA(i + 1)).concat(SOM_CALCULANDO, SOM_RESULTADO);
+    arquivos.forEach((a) => fetch(a).catch(() => { /* sem rede: carrega na hora */ }));
+  }
+  function falar(chave, arquivo) {
+    if (!SOM_ATIVO) return;
+    if (audio && atual === chave) return; // já está nessa faixa
+    const novo = !audio;
+    if (novo) { audio = new Audio(); audio.preload = 'auto'; }
+    atual = chave;
+    tocouUmaVez = true;
+    audio.src = arquivo;
+    const inicio = audio.play(); // sai do toque da pessoa (ou segue no elemento já liberado)
+    if (novo) prepararAnalise();
+    if (inicio && inicio.catch) inicio.catch(() => { /* o navegador não deixou tocar sem um toque: a próxima etapa tenta de novo */ });
+    precarregar();
+  }
+  // Voltar para a tela inicial: corta a voz da etapa que ficou para trás (a apresentação não é cortada)
+  function calar() {
+    if (!audio || atual === 'intro') return;
+    audio.pause();
+    atual = '';
+  }
   // Se o navegador bloqueou o som ao carregar (iPhone), ele começa no primeiro toque da pessoa na página
   function aguardarToque() {
     const ligar = () => {
@@ -903,6 +948,10 @@ const som = (function () {
   return {
     /** Liga o áudio dentro do toque da pessoa (o botão Iniciar diagnóstico), se ele ainda não tocou. */
     ligar() { if (SOM_ATIVO && !tocouUmaVez) tocar(); },
+    /** Fala a voz de uma etapa (troca a faixa do áudio e toca). */
+    falar,
+    /** Para a voz de uma pergunta ou do resultado. */
+    calar,
     /**
      * O que a voz está fazendo agora: volume geral, graves, médios e agudos (de 0 a 1) e o andamento do áudio (0 a 1).
      * Com o áudio parado tudo é 0; depois que ele acaba o andamento fica em 1.
@@ -926,7 +975,7 @@ const som = (function () {
         const agudos = faixa(14, 48);
         return { nivel: Math.min(faixa(0, 48) * 1.4, 1), graves, medios, agudos, progresso };
       }
-      if (curva) {
+      if (curva && atual === 'intro') {
         // Mesmo movimento do analisador ao vivo: lê a gravação no ponto em que o áudio está (entre dois quadros, interpola)
         const x = Math.max(audio.currentTime * curva.taxa, 0);
         const i = Math.min(Math.floor(x), curva.nivel.length - 1);
