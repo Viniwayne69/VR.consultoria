@@ -18,6 +18,8 @@ let rolagemAntes = 0;
 function ligarSom() {
   const audio = new Audio(SOM_ARQUIVO);
   audio.preload = 'auto';
+  // Começa mudo: o toque libera o áudio (o iPhone só deixa dentro do toque), mas a voz só é ouvida quando o portal termina (soltarSom)
+  audio.muted = true;
   const som = { audio, analisador: null };
   audio.play().catch(() => { /* sem permissão: o diagnóstico tenta de novo no primeiro toque */ });
   // Para o orbe seguir a voz, o áudio passa por um analisador (Web Audio) no computador e no Android. Só entra no caminho se o
@@ -42,7 +44,24 @@ function ligarSom() {
   return som;
 }
 
-function abrirDiagnostico() {
+// A voz começa do início, com som, quando o diagnóstico aparece na tela
+function soltarSom() {
+  const som = window.__vrSom;
+  if (!som) return;
+  try { som.audio.currentTime = 0; } catch { /* ainda sem dados: já começa do zero */ }
+  som.audio.muted = false;
+  som.audio.play().catch(() => { /* sem permissão: o diagnóstico tenta de novo no primeiro toque */ });
+}
+
+// Partes do site que tombam para trás enquanto o portal abre
+const partesDoSite = [...document.querySelectorAll('main, .site-footer')];
+function limparPortal() {
+  document.documentElement.classList.remove('vr-saindo');
+  document.querySelectorAll('.vr-portal').forEach((portal) => portal.remove());
+}
+
+// origem: o botão clicado. O portal (círculo de borda acesa) cresce a partir dele até cobrir a tela e só então o diagnóstico aparece.
+function abrirDiagnostico(origem) {
   if (quadroDiagnostico) return;
   window.__vrSom = ligarSom();
   rolagemAntes = window.scrollY;
@@ -52,17 +71,41 @@ function abrirDiagnostico() {
   quadro.title = 'Diagnóstico';
   quadro.addEventListener('load', () => { try { quadro.contentWindow.focus(); } catch { /* nada */ } });
   document.body.appendChild(quadro);
-  // Trava o site por baixo (no iPhone o overflow sozinho não impede a rolagem) e esconde o que sobrar atrás do diagnóstico
-  document.body.style.top = -rolagemAntes + 'px';
-  document.documentElement.classList.add('dx-aberto');
   history.pushState({ vrDiagnostico: true }, '', '#diagnostico');
   quadroDiagnostico = quadro;
+  // Trava o site por baixo (no iPhone o overflow sozinho não impede a rolagem) e esconde o que sobrar atrás do diagnóstico
+  const travar = () => {
+    limparPortal();
+    quadro.classList.remove('dx-entrando');
+    if (quadroDiagnostico !== quadro) return; // fechado antes de o portal terminar
+    rolagemAntes = window.scrollY;
+    document.body.style.top = -rolagemAntes + 'px';
+    document.documentElement.classList.add('dx-aberto');
+    soltarSom();
+  };
+  if (!origem || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { travar(); return; }
+  const caixa = origem.getBoundingClientRect();
+  const x = caixa.left + caixa.width / 2;
+  const y = caixa.top + caixa.height / 2;
+  const raio = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+  const portal = document.createElement('div');
+  portal.className = 'vr-portal';
+  portal.setAttribute('aria-hidden', 'true');
+  portal.style.left = `${x}px`;
+  portal.style.top = `${y}px`;
+  portal.style.setProperty('--s', ((raio + 70) / 120).toFixed(2));
+  partesDoSite.forEach((parte) => parte.style.setProperty('--vy', `${(window.innerHeight / 2 - parte.getBoundingClientRect().top).toFixed(0)}px`));
+  quadro.classList.add('dx-entrando');
+  document.body.appendChild(portal);
+  document.documentElement.classList.add('vr-saindo');
+  setTimeout(travar, 660);
 }
 
 function fecharDiagnostico() {
   if (!quadroDiagnostico) return;
   quadroDiagnostico.remove();
   quadroDiagnostico = null;
+  limparPortal();
   document.documentElement.classList.remove('dx-aberto');
   document.body.style.top = '';
   window.scrollTo(0, rolagemAntes);
@@ -80,7 +123,7 @@ document.querySelectorAll('[data-cta]').forEach((link) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     window.vrEfeitos?.tocar('iniciar');
-    abrirDiagnostico();
+    abrirDiagnostico(link);
   });
 });
 

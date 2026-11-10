@@ -454,6 +454,41 @@ body {overflow-x:clip}
   .button {translate:none}
 }
 
+/* ============ IMERSÃO 3D · hero, carimbo e portal do diagnóstico ============ */
+/* "O DOBRO." em relevo: a letra ganha espessura para baixo (a folga extra evita cortar a sombra) */
+.dobro {padding-bottom:.3em;margin-bottom:-.3em}
+/* A folga maior deixaria a ponta de O DOBRO. aparecer antes da hora: ele espera mais abaixo, fora da máscara */
+.anim .dobro-new {transform:translate3d(0,175%,0)}
+.dobro-new {text-shadow:0 .014em 0 #D9530F,0 .028em 0 #C4490C,0 .042em 0 #AE400A,0 .056em 0 #983708,0 .07em 0 #7E2C05,0 .15em .18em rgba(0,0,0,.5)}
+
+/* Hero em camadas: a moldura vinho fica atrás, a foto no meio e o carimbo na frente. O script escreve --hx e --hy (de -1 a 1)
+   com a posição do mouse; no celular o retrato balança sozinho e tomba um pouco ao rolar. */
+.anim .portrait-hero {isolation:auto;transform-style:preserve-3d;transform:perspective(1100px) rotateX(calc(var(--hy,0) * -7deg)) rotateY(calc(var(--hx,0) * 9deg))}
+.anim .portrait-hero::before {transform:translate3d(16px,calc(-16px - var(--par,0px)),-56px) scale(1.051)}
+.anim .portrait-hero .portrait-image {scale:1.07;translate:calc(var(--hx,0) * -9px) calc(var(--hy,0) * -7px)}
+.anim .hero-stamp {translate:calc(var(--hx,0) * 18px) calc(var(--hy,0) * 13px)}
+/* Luz viva atrás do retrato: um anel de luz nas cores do orbe do diagnóstico, girando devagar */
+.anim .hero-visual::before {content:'';position:absolute;z-index:-1;left:50%;top:50%;width:150%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,#F0601A,#9A1F33 22%,rgba(154,31,51,0) 40%,#FF7A33 58%,#6E1423 78%,#F0601A);-webkit-mask:radial-gradient(closest-side,transparent 68%,#000 78%,#000 84%,transparent 100%);mask:radial-gradient(closest-side,transparent 68%,#000 78%,#000 84%,transparent 100%);filter:blur(16px);opacity:.6;animation:luzGiraHero 18s linear infinite}
+@keyframes luzGiraHero {to {rotate:360deg}}
+
+/* Carimbo como moeda: frente e verso com o carimbo e discos empilhados formando a borda. O script escreve --giro (graus). */
+.moeda {perspective:520px}
+.moeda::before {content:'';position:absolute;inset:8%;border-radius:50%;box-shadow:0 16px 26px rgba(0,0,0,.6)}
+.moeda-giro {position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;transform:rotateY(calc(var(--giro,0) * 1deg))}
+.moeda-giro>span {position:absolute;inset:0;border-radius:50%}
+.moeda-borda {background:linear-gradient(90deg,#5C2204,#F0601A 30%,#FFB680 50%,#F0601A 70%,#5C2204);transform:translateZ(calc(var(--k) * 1px))}
+.moeda-face {display:grid;place-items:center;background:radial-gradient(circle at 35% 28%,#3A3034,#151214 62%);box-shadow:inset 0 0 0 2px rgba(240,96,26,.6),inset 0 0 18px rgba(0,0,0,.6);-webkit-backface-visibility:hidden;backface-visibility:hidden;transform:translateZ(6px)}
+.moeda-face::after {content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(120deg,rgba(255,255,255,.26),rgba(255,255,255,0) 40%)}
+.moeda-face img {width:90%;height:90%}
+.moeda-verso {transform:rotateY(180deg) translateZ(6px)}
+
+/* Portal: ao clicar num botão de diagnóstico, um círculo com a borda acesa cresce a partir do botão enquanto o site tomba para trás */
+.vr-portal {position:fixed;z-index:9998;width:240px;height:240px;margin:-120px 0 0 -120px;border-radius:50%;pointer-events:none;background:#111012;box-shadow:0 0 0 2px #FF7A33,0 0 22px 6px rgba(240,96,26,.7),inset 0 0 34px 4px rgba(240,96,26,.45);transform:scale(.05);will-change:transform;animation:portalAbre .68s cubic-bezier(.5,0,.9,.5) forwards}
+@keyframes portalAbre {to {transform:scale(var(--s,12))}}
+.dx-overlay {transition:opacity .4s ease}
+.dx-overlay.dx-entrando {opacity:0;pointer-events:none}
+html.vr-saindo main,html.vr-saindo .site-footer {transform:perspective(1200px) rotateX(7deg) scale(.93);transform-origin:50% var(--vy,50%);transition:transform .64s cubic-bezier(.6,0,.3,1)}
+
 /* Diagnóstico aberto por cima do site: cobre a tela toda (inclusive sob as barras do Safari) e trava e esconde o site por baixo */
 .dx-overlay {position:fixed;top:0;left:0;width:100%;height:100vh;height:100dvh;border:0;z-index:9999;background:#111012}
 /* iPhone: o quadro mede a tela cheia menos a barra do Safari, que fica por cima da parte de baixo (o fundo escuro aparece atrás dela) */
