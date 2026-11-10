@@ -467,9 +467,6 @@ body {overflow-x:clip}
 .anim .portrait-hero::before {transform:translate3d(16px,calc(-16px - var(--par,0px)),-56px) scale(1.051)}
 .anim .portrait-hero .portrait-image {scale:1.07;translate:calc(var(--hx,0) * -9px) calc(var(--hy,0) * -7px)}
 .anim .hero-stamp {translate:calc(var(--hx,0) * 18px) calc(var(--hy,0) * 13px)}
-/* Luz viva atrás do retrato: um anel de luz nas cores do orbe do diagnóstico, girando devagar */
-.anim .hero-visual::before {content:'';position:absolute;z-index:-1;left:50%;top:50%;width:150%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,#F0601A,#9A1F33 22%,rgba(154,31,51,0) 40%,#FF7A33 58%,#6E1423 78%,#F0601A);-webkit-mask:radial-gradient(closest-side,transparent 68%,#000 78%,#000 84%,transparent 100%);mask:radial-gradient(closest-side,transparent 68%,#000 78%,#000 84%,transparent 100%);filter:blur(16px);opacity:.6;animation:luzGiraHero 18s linear infinite}
-@keyframes luzGiraHero {to {rotate:360deg}}
 
 /* Carimbo como moeda: frente e verso com o carimbo e discos empilhados formando a borda. O script escreve --giro (graus). */
 .moeda {perspective:520px}
