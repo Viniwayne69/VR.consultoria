@@ -147,6 +147,8 @@ html.dx-embutido {overscroll-behavior:none}
 /* ============ Resultado: seção clara, cartões escuros com o bloco vinho atrás ============ */
 .dx-result {display:grid;gap:18px;width:100%}
 .res-entra {animation:resSobe .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:var(--d,0ms)}
+.res-card.res-entra {animation:resCartao .95s cubic-bezier(.2,.7,.2,1) backwards;animation-delay:var(--d,0ms)}
+@keyframes resCartao {from {opacity:0;transform:perspective(1100px) translateY(70px) rotateX(-38deg) translateZ(-180px)}}
 @keyframes resSobe {from {opacity:0;transform:translateY(22px)} to {opacity:1;transform:none}}
 .res-titulo {animation:resTitulo .9s cubic-bezier(.2,.7,.2,1) .75s backwards}
 @keyframes resTitulo {
@@ -158,9 +160,10 @@ html.dx-embutido {overscroll-behavior:none}
 .res-h1 {font-size:clamp(40px,12vw,64px);line-height:.92;color:var(--vinho);outline:none}
 .res-text {max-width:460px;font-size:16px;line-height:1.55;color:var(--grafite)}
 
-.res-card {position:relative;isolation:isolate;margin:12px 12px 0 0;padding:22px 20px;color:var(--papel)}
-.res-card::after {content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(165deg,#1E191C,var(--tinta) 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.6),0 18px 28px -14px rgba(0,0,0,.55)}
-.res-card::before {content:'';position:absolute;inset:0;z-index:-1;background:var(--vinho-vivo);transform:translate(12px,-12px);clip-path:polygon(40px 0,100% 0,calc(100% - 40px) 100%,0 100%)}
+.res-card {position:relative;z-index:0;margin:12px 12px 0 0;padding:22px 20px;color:var(--papel);transform-style:preserve-3d;transform:perspective(1100px) rotateX(calc(var(--ty,0) * 1deg)) rotateY(calc(var(--tx,0) * 1deg));transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.res-card.is-tilting {transition:transform .09s linear}
+.res-card::after {content:"";position:absolute;inset:0;z-index:-1;transform:translateZ(-2px);background:linear-gradient(165deg,#1E191C,var(--tinta) 55%);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.6),0 18px 28px -14px rgba(0,0,0,.55)}
+.res-card::before {content:'';position:absolute;inset:0;z-index:-1;background:var(--vinho-vivo);transform:translate3d(12px,-12px,-34px);clip-path:polygon(40px 0,100% 0,calc(100% - 40px) 100%,0 100%)}
 .res-card-title {border-left:1px solid var(--fogo);padding-left:12px;font:700 11px/1.3 var(--body-font);letter-spacing:.1em;text-transform:uppercase;color:var(--fogo)}
 
 .res-gauge-box {position:relative;width:100%;max-width:340px;margin:16px auto 0}
@@ -210,6 +213,19 @@ html.dx-embutido {overscroll-behavior:none}
 .res-chip.forte {background:var(--fogo);color:var(--tinta)}
 .res-chip.meio {border:1px solid var(--cimento);color:var(--papel)}
 .res-chip.fraco {background:var(--vinho-vivo);color:var(--papel)}
+
+/* Profundidade: cada camada fica a uma distância diferente e se desloca um pouco ao inclinar o cartão */
+.res-card-title {transform:translateZ(26px)}
+.res-glare {position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,0%),rgba(255,255,255,.16),transparent 58%);opacity:var(--go,0);transition:opacity .25s;transform:translateZ(70px)}
+.res-gauge-box,.res-radar-box {transform-style:preserve-3d}
+.res-gauge-box .res-agulha {position:absolute;inset:0;width:100%;height:100%;transform:translateZ(36px)}
+.res-ext {transform:translateZ(18px)}
+.res-score {transform:translateZ(62px)}
+.res-radar-box {transform:rotateX(16deg)}
+.res-radar-box .res-topo {transform:translateZ(30px)}
+.res-area {transform:translate(-50%,-50%) translateZ(58px)}
+/* Título do resultado em relevo */
+.res-h1 {text-shadow:0 1px 0 #4A0F1B,0 2px 0 #430D18,0 3px 0 #3C0B15,0 4px 0 #350A13,0 5px 0 #2E0810,0 14px 16px rgba(17,16,18,.3)}
 
 /* Faixa vinho do fim: a chamada para o WhatsApp (no celular fica colada no rodapé da tela) */
 .res-cta-wrap {position:sticky;bottom:0;z-index:10;isolation:isolate;margin-top:28px;padding:12px 0}

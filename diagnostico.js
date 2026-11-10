@@ -461,6 +461,33 @@ function svg(markup, classe, viewBox) {
   return el;
 }
 
+/** Cartão que se inclina em 3D na direção do dedo ou do mouse, com um brilho que acompanha o ponto tocado. */
+function inclinarCartao(cartao) {
+  if (semMovimento()) return;
+  cartao.append(h('span', { class: 'res-glare', 'aria-hidden': 'true' }));
+  const max = 9; // graus
+  let quadro = 0;
+  const aplicar = (px, py, ativo) => {
+    cartao.style.setProperty('--tx', (px * max).toFixed(2));
+    cartao.style.setProperty('--ty', (-py * max).toFixed(2));
+    cartao.style.setProperty('--gx', ((px + 1) * 50).toFixed(1) + '%');
+    cartao.style.setProperty('--gy', ((py + 1) * 50).toFixed(1) + '%');
+    cartao.style.setProperty('--go', ativo ? '1' : '0');
+    cartao.classList.toggle('is-tilting', ativo);
+  };
+  const soltar = () => { cancelAnimationFrame(quadro); aplicar(0, 0, false); };
+  cartao.addEventListener('pointermove', (e) => {
+    const r = cartao.getBoundingClientRect();
+    const px = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+    const py = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
+    cancelAnimationFrame(quadro);
+    quadro = requestAnimationFrame(() => aplicar(px, py, true));
+  });
+  cartao.addEventListener('pointerleave', soltar);
+  cartao.addEventListener('pointercancel', soltar);
+  cartao.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') soltar(); });
+}
+
 function telaResultado(resultado) {
   const { nota, perfil, porArea, fraco } = resultado;
   const nome = primeiroNome();
@@ -473,47 +500,52 @@ function telaResultado(resultado) {
     const a = Math.PI * (1 - v / 10);
     return `<text x="${(120 + 114 * Math.cos(a)).toFixed(1)}" y="${(120 - 114 * Math.sin(a)).toFixed(1)}" font-size="9" font-weight="700" fill="#CDC5B5" text-anchor="middle" dominant-baseline="middle">${v}</text>`;
   }).join('');
-  // Medidor em relevo: mostrador com profundidade, canal fundo, arco em tubo (luz vinda de cima), ponteiro cônico com sombra e um pino metálico
+  // Medidor em 3D, em duas camadas: o mostrador (canal fundo e arco em tubo) e, por cima e mais perto de quem olha, o ponteiro com o pino
   const arcoDe = (r) => `M ${120 - r} 120 A ${r} ${r} 0 0 1 ${120 + r} 120`;
-  const defsMedidor =
+  const defsMostrador =
     `<defs>` +
     `<radialGradient id="g-mostrador" cx="120" cy="120" r="116" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2E282C"/><stop offset=".72" stop-color="#1B171A"/><stop offset="1" stop-color="#111012" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="g-sobe" x1="0" y1="118" x2="0" y2="182" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
+    `<mask id="g-desce" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="190"><rect x="0" y="0" width="240" height="190" fill="url(#g-sobe)"/><rect x="0" y="0" width="240" height="118" fill="#fff"/></mask>` +
+    `<filter id="g-borra" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>` +
+    `</defs>`;
+  const defsPonteiro =
+    `<defs>` +
     `<linearGradient id="g-ponteiro" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A39B8E"/><stop offset=".5" stop-color="#FFFFFF"/><stop offset="1" stop-color="#B5AC9D"/></linearGradient>` +
     `<radialGradient id="g-metal" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".4" stop-color="#ECE5D8"/><stop offset="1" stop-color="#6A6358"/></radialGradient>` +
     `<radialGradient id="g-joia" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFD2AE"/><stop offset=".45" stop-color="#F0601A"/><stop offset="1" stop-color="#7E2704"/></radialGradient>` +
-    `<linearGradient id="g-sobe" x1="0" y1="118" x2="0" y2="182" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient><mask id="g-desce" maskUnits="userSpaceOnUse" x="0" y="0" width="240" height="190"><rect x="0" y="0" width="240" height="190" fill="url(#g-sobe)"/><rect x="0" y="0" width="240" height="118" fill="#fff"/></mask>` +
-    `<filter id="g-borra" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>` +
     `<filter id="g-sombra" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>` +
     `</defs>`;
   const medidor = svg(
-    defsMedidor +
+    defsMostrador +
     `<circle cx="120" cy="120" r="116" fill="url(#g-mostrador)" mask="url(#g-desce)"/>` +
-    // canal fundo: borda de sombra por dentro, borda de luz por fora
     `<path d="${arcoDe(100)}" fill="none" stroke="#050405" stroke-width="20"/>` +
     `<path d="${arcoDe(100)}" fill="none" stroke="#3A3437" stroke-width="14"/>` +
     `<path d="${arcoDe(94.5)}" fill="none" stroke="#1E1A1D" stroke-width="3"/>` +
     `<path d="${arcoDe(110.5)}" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="1.5"/>` +
-    // arco aceso: brilho, corpo, sombra na borda de dentro e reflexo na de fora
     `<path d="${arcoDe(100)}" pathLength="100" fill="none" stroke="#F0601A" stroke-opacity=".55" stroke-width="24" filter="url(#g-borra)" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
     `<path d="${arcoDe(100)}" pathLength="100" fill="none" stroke="#F0601A" stroke-width="14" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
     `<path d="${arcoDe(94.5)}" pathLength="100" fill="none" stroke="#8A2E06" stroke-width="3" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
     `<path d="${arcoDe(104.5)}" pathLength="100" fill="none" stroke="#FFB680" stroke-width="3.5" stroke-opacity=".9" class="arco-enche" style="--off:${100 - nota * 10}"/>` +
+    `<g class="dx-ticks">${ticks}</g>`,
+    '', '0 0 240 190');
+  const agulha = svg(
+    defsPonteiro +
     `<g class="ponteiro" style="--ang:${ang}deg">` +
       `<polygon points="115,120 125,120 121.2,38 118.8,38" fill="#000" fill-opacity=".55" transform="translate(5 7)" filter="url(#g-sombra)"/>` +
       `<polygon points="116,120 124,120 120.9,40 119.1,40" fill="url(#g-ponteiro)"/>` +
       `<polygon points="116,120 124,120 122.5,138 117.5,138" fill="#8F877B"/>` +
     `</g>` +
-    `<g class="dx-ticks">${ticks}</g>` +
     `<circle cx="124" cy="127" r="13" fill="#000" fill-opacity=".55" filter="url(#g-sombra)"/>` +
     `<circle cx="120" cy="120" r="12" fill="url(#g-metal)"/>` +
     `<circle cx="120" cy="120" r="12" fill="none" stroke="#000" stroke-opacity=".3"/>` +
     `<circle cx="120" cy="120" r="5.5" fill="url(#g-joia)"/>` +
     `<ellipse cx="116.5" cy="115.5" rx="3.2" ry="2" fill="#fff" fill-opacity=".75"/>`,
-    '', '0 0 240 190');
+    'res-agulha', '0 0 240 190');
   const contagem = h('b', { class: 'dx-score-n' }, '0');
   const sectionMedidor = h('section', { class: 'res-card res-gauge res-entra', style: '--d:1000ms', 'aria-label': `${t.resultado.medidorTitulo}: ${nota} de 10` },
     h('p', { class: 'res-card-title' }, t.resultado.medidorTitulo),
-    h('div', { class: 'res-gauge-box' }, medidor,
+    h('div', { class: 'res-gauge-box' }, medidor, agulha,
       h('p', { class: 'res-ext l' }, t.resultado.medidorExtremos[0]),
       h('p', { class: 'res-ext r' }, t.resultado.medidorExtremos[1]),
       h('p', { class: 'res-score' }, contagem, h('span', {}, 'de 10'))));
@@ -540,24 +572,29 @@ function telaResultado(resultado) {
       `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="url(#${fracoAqui ? 'r-vinho' : 'r-esfera'})" stroke="${fracoAqui ? '#ECE5D8' : '#111012'}" stroke-width="1.2" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>` +
       `<ellipse cx="${(x - r * 0.32).toFixed(1)}" cy="${(y - r * 0.38).toFixed(1)}" rx="${(r * 0.32).toFixed(1)}" ry="${(r * 0.2).toFixed(1)}" fill="#fff" fill-opacity=".7" class="radar-no" style="animation-delay:${(2.9 + i * 0.25).toFixed(2)}s"/>`;
   }).join('');
-  const radar = svg(
+  // Radar em 3D, em duas camadas: o piso de pedra com a sombra do desenho e, mais perto de quem olha, o prisma com os pontos
+  const radarPiso = svg(
     `<defs>` +
     `<radialGradient id="r-piso" cx="150" cy="150" r="96" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#352F33"/><stop offset="1" stop-color="#1C181B"/></radialGradient>` +
-    `<linearGradient id="r-topo" x1="0" y1="52" x2="0" y2="248" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFA766"/><stop offset=".55" stop-color="#F0601A"/><stop offset="1" stop-color="#D24A0C"/></linearGradient>` +
-    `<radialGradient id="r-esfera" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFE6D0"/><stop offset=".4" stop-color="#F0601A"/><stop offset="1" stop-color="#8C3006"/></radialGradient>` +
-    `<radialGradient id="r-vinho" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FF8CA0"/><stop offset=".4" stop-color="#B8263D"/><stop offset="1" stop-color="#4A0C18"/></radialGradient>` +
-    `<filter id="r-sombra" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.6"/></filter>` +
     `<filter id="r-borra" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>` +
     `</defs>` +
     espessuraPiso +
     `<polygon points="${hexPiso}" fill="url(#r-piso)" stroke="#5A5256" stroke-width="1.2" stroke-linejoin="round"/>` +
     grade + eixos +
-    `<polygon points="${hexDados}" transform="translate(5 12)" fill="#000" fill-opacity=".55" filter="url(#r-borra)" class="radar-fill"/>` +
+    `<polygon points="${hexDados}" transform="translate(5 12)" fill="#000" fill-opacity=".55" filter="url(#r-borra)" class="radar-fill"/>`,
+    'res-piso', '0 0 300 300');
+  const radarTopo = svg(
+    `<defs>` +
+    `<linearGradient id="r-topo" x1="0" y1="52" x2="0" y2="248" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFA766"/><stop offset=".55" stop-color="#F0601A"/><stop offset="1" stop-color="#D24A0C"/></linearGradient>` +
+    `<radialGradient id="r-esfera" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FFE6D0"/><stop offset=".4" stop-color="#F0601A"/><stop offset="1" stop-color="#8C3006"/></radialGradient>` +
+    `<radialGradient id="r-vinho" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#FF8CA0"/><stop offset=".4" stop-color="#B8263D"/><stop offset="1" stop-color="#4A0C18"/></radialGradient>` +
+    `<filter id="r-sombra" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="1.6"/></filter>` +
+    `</defs>` +
     `<g class="radar-prisma">${lados}` +
     `<polygon points="${hexDados}" fill="url(#r-topo)" stroke="#FFD2AE" stroke-width="1.5" stroke-linejoin="round"/></g>` +
     `<polygon points="${hexDados}" pathLength="100" fill="none" stroke="#FFE3C8" stroke-width="2.5" stroke-linejoin="round" class="radar-traco"/>` +
     nos,
-    '', '0 0 300 300');
+    'res-topo', '0 0 300 300');
 
   const detalhe = h('div', { 'aria-live': 'polite' });
   const botoesArea = [];
@@ -587,7 +624,7 @@ function telaResultado(resultado) {
   const sectionRadar = h('section', { class: 'res-card res-radar res-entra', style: '--d:2600ms', 'aria-label': t.resultado.radarTitulo },
     h('p', { class: 'res-card-title' }, t.resultado.radarTitulo),
     h('p', { class: 'res-tap' }, t.resultado.toque),
-    h('div', { class: 'res-radar-box' }, radar, botoesArea.map(([b]) => b)),
+    h('div', { class: 'res-radar-box' }, radarPiso, radarTopo, botoesArea.map(([b]) => b)),
     detalhe);
   if (fraco) mostrarArea(fraco);
 
@@ -595,6 +632,8 @@ function telaResultado(resultado) {
   const areaFraca = areas.find((a) => a.id === fraco);
   const mensagem = `Oi, sou ${nome}, da ${respostas.empresa.trim()}, fiz o diagnóstico e deu ${perfil.titulo} (desejo ${nota}/10)${areaFraca ? `, com ponto mais fraco em ${areaFraca.rotulo}` : ''}, quero conversar`;
   const link = `https://wa.me/${apenasDigitos(WHATSAPP_NUMBER)}?text=${encodeURIComponent(mensagem)}`;
+
+  [sectionMedidor, sectionRadar].forEach(inclinarCartao);
 
   return h('div', { class: 'dx-result' },
     h('p', { class: 'res-label res-entra', style: '--d:900ms' }, `${nome}, ${t.resultado.rotulo}`),
