@@ -461,18 +461,14 @@ function svg(markup, classe, viewBox) {
   return el;
 }
 
-/** Cartão que se inclina em 3D na direção do dedo ou do mouse, com um brilho que acompanha o ponto tocado. */
+/** Cartão que se inclina em 3D na direção do dedo ou do mouse. */
 function inclinarCartao(cartao) {
   if (semMovimento()) return;
-  cartao.append(h('span', { class: 'res-glare', 'aria-hidden': 'true' }));
   const max = 9; // graus
   let quadro = 0;
   const aplicar = (px, py, ativo) => {
     cartao.style.setProperty('--tx', (px * max).toFixed(2));
     cartao.style.setProperty('--ty', (-py * max).toFixed(2));
-    cartao.style.setProperty('--gx', ((px + 1) * 50).toFixed(1) + '%');
-    cartao.style.setProperty('--gy', ((py + 1) * 50).toFixed(1) + '%');
-    cartao.style.setProperty('--go', ativo ? '1' : '0');
     cartao.classList.toggle('is-tilting', ativo);
   };
   const soltar = () => { cancelAnimationFrame(quadro); aplicar(0, 0, false); };

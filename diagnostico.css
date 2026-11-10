@@ -216,7 +216,6 @@ html.dx-embutido {overscroll-behavior:none}
 
 /* Profundidade: cada camada fica a uma distância diferente e se desloca um pouco ao inclinar o cartão */
 .res-card-title {transform:translateZ(26px)}
-.res-glare {position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,0%),rgba(255,255,255,.16),transparent 58%);opacity:var(--go,0);transition:opacity .25s;transform:translateZ(70px)}
 .res-gauge-box,.res-radar-box {transform-style:preserve-3d}
 .res-gauge-box .res-agulha {position:absolute;inset:0;width:100%;height:100%;transform:translateZ(36px)}
 .res-ext {transform:translateZ(18px)}
